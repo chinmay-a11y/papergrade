@@ -1,0 +1,54 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PaperGrade — Class dashboard</title>
+<link rel="stylesheet" href="/app.css">
+<div id="topbar"></div>
+<div class="wrap">
+  <h1>Class dashboard</h1>
+  <p class="sub">Agreement, review load, and where the class is failing — the artefact a principal buys.</p>
+
+  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">
+    <div class="stat"><div class="k">Quadratic weighted κ</div><div class="big" id="qwk">—</div><div class="muted" id="qwkn"></div></div>
+    <div class="stat"><div class="k">Scripts graded</div><div class="big" id="scripts">—</div></div>
+    <div class="stat"><div class="k">Needs-review queue</div><div class="big" id="queue">—</div></div>
+    <div class="stat"><div class="k">Teacher minutes saved</div><div class="big" id="mins">—</div></div>
+    <div class="stat"><div class="k">Score overrides</div><div class="big" id="overrides">—</div></div>
+  </div>
+
+  <div class="panel" style="margin-top:20px">
+    <h2>Concept-failure — % of answers below half marks</h2>
+    <div id="concepts"></div>
+  </div>
+
+  <p class="muted" style="font-size:13px;margin-top:14px">
+    κ is reported honestly with sample size (n). Overridden marks count as teacher ground truth.
+    A hand-graded set of ~20 scripts sharpens this number.
+  </p>
+</div>
+<script src="/app.js"></script>
+<script>
+mountTopbar('dashboard');
+api(`/api/w/${WID}/dashboard`).then(d => {
+  document.getElementById('qwk').textContent = d.qwk == null ? '—' : d.qwk;
+  document.getElementById('qwkn').textContent = d.qwk_n ? `n = ${d.qwk_n} answers` : 'no data yet';
+  document.getElementById('scripts').textContent = `${d.scripts_done}/${d.scripts_total}`;
+  document.getElementById('queue').textContent = d.low_confidence_queue;
+  document.getElementById('mins').textContent = d.minutes_saved;
+  document.getElementById('overrides').textContent = d.overrides;
+
+  const box = document.getElementById('concepts');
+  if (!d.concepts.length) { box.innerHTML = '<p class="muted">No graded answers yet.</p>'; return; }
+  const maxRate = Math.max(...d.concepts.map(c => c.fail_rate), 0.001);
+  d.concepts.forEach(c => {
+    const pct = Math.round(c.fail_rate * 100);
+    const w = Math.round((c.fail_rate / maxRate) * 100);
+    box.append(el('div', { style: 'margin:12px 0' },
+      el('div', { class: 'row', style: 'justify-content:space-between;margin-bottom:4px' },
+        el('b', {}, c.concept),
+        el('span', { class: 'muted' }, `${c.failed}/${c.total} students · ${pct}%`)),
+      el('div', { class: 'confbar ' + (pct >= 50 ? 'conf-lo' : pct >= 25 ? 'conf-mid' : 'conf-hi') },
+        el('span', { style: `width:${w}%` })),
+    ));
+  });
+}).catch(e => toast('Load failed: ' + e.message));
+</script>

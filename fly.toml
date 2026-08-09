@@ -1,0 +1,28 @@
+# Fly.io — pinned to Mumbai (bom). Data residency is a strategic argument: minors'
+# answer scripts under India's DPDP Act never leave the country (§10 of the brief).
+app = "papergrade"
+primary_region = "bom"
+
+[build]
+  builder = "heroku/builder:24"
+
+[env]
+  PORT = "3400"
+
+[http_service]
+  internal_port = 3400
+  force_https = true
+  auto_stop_machines = "suspend"
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+
+# SQLite lives on a persistent volume so graded scripts survive restarts.
+[mounts]
+  source = "papergrade_data"
+  destination = "/app/data"
+
+# Set the secret before deploy:  fly secrets set SARVAM_API_KEY=...

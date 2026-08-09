@@ -1,0 +1,86 @@
+{
+  "questions": [
+    {
+      "no": 1,
+      "concept": "प्रकाश संश्लेषण क्या है? कच्चे माल बताइए। (5)"
+    },
+    {
+      "no": 2,
+      "concept": "बल की परिभाषा और एक प्रभाव लिखिए। (5)"
+    },
+    {
+      "no": 3,
+      "concept": "जल का क्वथनांक और अवस्था परिवर्तन बताइए। (5)"
+    },
+    {
+      "no": 4,
+      "concept": "मानव शरीर में रक्त का कार्य क्या है? (5)"
+    },
+    {
+      "no": 5,
+      "concept": "घर्षण क्या है? एक दैनिक प्रभाव लिखिए। (5)"
+    }
+  ],
+  "students": [
+    {
+      "name": "Aarav Sharma",
+      "tiers": [
+        "good",
+        "good",
+        "ok",
+        "good",
+        "bad"
+      ]
+    },
+    {
+      "name": "Diya Patel",
+      "tiers": [
+        "good",
+        "ok",
+        "good",
+        "ok",
+        "bad"
+      ]
+    },
+    {
+      "name": "Kabir Singh",
+      "tiers": [
+        "ok",
+        "good",
+        "good",
+        "bad",
+        "bad"
+      ]
+    },
+    {
+      "name": "Meera Nair",
+      "tiers": [
+        "good",
+        "good",
+        "ok",
+        "good",
+        "ok"
+      ]
+    },
+    {
+      "name": "Rohan Das",
+      "tiers": [
+        "ok",
+        "bad",
+        "ok",
+        "ok",
+        "bad"
+      ]
+    },
+    {
+      "name": "Ananya Rao",
+      "tiers": [
+        "good",
+        "ok",
+        "bad",
+        "good",
+        "bad"
+      ]
+    }
+  ]
+}

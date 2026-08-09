@@ -1,0 +1,82 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PaperGrade — Capture</title>
+<link rel="stylesheet" href="/app.css">
+<div id="topbar"></div>
+<div class="wrap">
+  <h1>Capture answer scripts</h1>
+  <p class="sub">Photograph or upload one page per student. Grading starts automatically.</p>
+
+  <div class="panel">
+    <label>Add scripts</label>
+    <input type="file" id="files" accept="image/*" capture="environment" multiple>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" id="uploadBtn" disabled>Upload &amp; grade</button>
+      <a class="btn ghost" href="#" id="toReview">Go to Review console →</a>
+    </div>
+    <div id="thumbs" class="row" style="margin-top:16px"></div>
+  </div>
+
+  <div class="panel" style="margin-top:20px">
+    <h2>Batch status</h2>
+    <div id="list" class="grid"></div>
+  </div>
+</div>
+<script src="/app.js"></script>
+<script>
+mountTopbar('capture');
+document.getElementById('toReview').href = `/review.html?w=${WID}`;
+
+let picked = [];
+const filesInput = document.getElementById('files');
+const uploadBtn = document.getElementById('uploadBtn');
+
+filesInput.onchange = () => {
+  picked = [...filesInput.files];
+  const thumbs = document.getElementById('thumbs');
+  thumbs.innerHTML = '';
+  picked.forEach(f => {
+    const url = URL.createObjectURL(f);
+    thumbs.append(el('img', { src: url, width: 84, height: 108,
+      style: 'object-fit:cover;border-radius:8px;border:1px solid var(--line)' }));
+  });
+  uploadBtn.disabled = picked.length === 0;
+};
+
+uploadBtn.onclick = async () => {
+  uploadBtn.disabled = true; uploadBtn.textContent = 'Uploading…';
+  const fd = new FormData();
+  picked.forEach(f => fd.append('images', f));
+  try {
+    await api(`/api/w/${WID}/scripts`, { method: 'POST', body: fd });
+    toast('Uploaded — grading in progress');
+    filesInput.value = ''; picked = []; document.getElementById('thumbs').innerHTML = '';
+  } catch (e) { toast('Upload failed: ' + e.message); }
+  uploadBtn.textContent = 'Upload & grade';
+};
+
+const STATUS_ORDER = ['queued', 'extracting', 'grading', 'done'];
+function renderList(scripts) {
+  const list = document.getElementById('list');
+  list.innerHTML = '';
+  if (!scripts.length) { list.append(el('p', { class: 'muted' }, 'No scripts yet — upload above.')); return; }
+  scripts.forEach(s => {
+    const score = (s.total_awarded != null && s.total_max)
+      ? el('span', { class: 'mono' }, `${fmt(s.total_awarded)} / ${fmt(s.total_max)}`) : el('span', { class: 'muted' }, '—');
+    list.append(el('div', { class: 'panel', style: 'display:flex;align-items:center;gap:14px;padding:14px' },
+      el('div', { class: 'mono', style: 'flex:1' }, s.student_alias),
+      score,
+      el('span', { class: 'chip ' + s.status }, s.status.replace('_', ' ')),
+    ));
+  });
+}
+
+async function poll() {
+  try {
+    const d = await api(`/api/w/${WID}/scripts`);
+    renderList(d.scripts);
+  } catch {}
+}
+poll();
+setInterval(poll, 1500);
+</script>

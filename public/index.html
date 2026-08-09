@@ -1,0 +1,127 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PaperGrade — Setup</title>
+<link rel="stylesheet" href="/app.css">
+<div id="topbar"></div>
+<div class="wrap">
+
+  <!-- No workspace: landing / Try it now -->
+  <div id="landing" class="hidden">
+    <div class="panel center" style="padding:40px 24px">
+      <h1>Grade handwritten answer sheets — in the student's language</h1>
+      <p class="sub" style="max-width:620px;margin:8px auto 24px">
+        Photograph a stack of handwritten Hindi scripts. Sarvam Vision reads the handwriting,
+        Sarvam-105B grades against your rubric, and every student hears spoken feedback in Hindi
+        via a QR code. No student logins.
+      </p>
+      <button class="btn" id="tryBtn">Try it now →</button>
+      <p class="muted" style="margin-top:12px;font-size:13px">Mints a fresh demo class seeded with a Class 8 Science rubric.</p>
+    </div>
+
+    <div class="row" style="margin-top:24px">
+      <div class="panel" style="flex:1;min-width:280px">
+        <h2>How it works</h2>
+        <ol class="muted" style="padding-left:18px;line-height:2;margin:0">
+          <li>Paste a rubric → compiled once into structured JSON</li>
+          <li>Photograph answer scripts (phone camera, in-browser)</li>
+          <li><b>Sarvam Vision</b> extracts handwriting per question</li>
+          <li><b>Sarvam-105B</b> grades each answer, can abstain</li>
+          <li><b>Bulbul</b> speaks feedback in Hindi → QR on the paper</li>
+        </ol>
+      </div>
+      <div class="panel center" style="width:280px">
+        <h2>Judge? Scan this</h2>
+        <img id="judgeQr" alt="judge QR" width="200" height="200" style="border-radius:8px">
+        <p class="muted" style="font-size:13px">Lands on the shared demo class on your phone.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Workspace present: rubric setup -->
+  <div id="setup" class="hidden">
+    <h1>Setup</h1>
+    <p class="sub">Paste or edit the rubric, pick the class details, then move to capture.</p>
+    <div class="row">
+      <div class="panel" style="flex:2;min-width:320px">
+        <div class="row">
+          <div style="flex:1"><label>Subject</label><input type="text" id="subject" value="Science"></div>
+          <div style="flex:1"><label>Class</label><input type="text" id="class_label" value="Class 8"></div>
+          <div style="flex:1"><label>Feedback language</label>
+            <select id="language">
+              <option value="hi-IN" selected>Hindi</option>
+              <option value="mr-IN">Marathi</option>
+              <option value="kn-IN">Kannada</option>
+            </select>
+          </div>
+        </div>
+        <label>Rubric (teacher's own wording — English is fine)</label>
+        <textarea id="source_text"></textarea>
+        <div class="row" style="margin-top:14px">
+          <button class="btn" id="compileBtn">Compile rubric</button>
+          <a class="btn ghost" id="toCapture" href="#">Continue to Capture →</a>
+        </div>
+      </div>
+      <div class="panel" style="flex:1;min-width:280px">
+        <h2>Compiled questions</h2>
+        <div id="questions" class="muted">Compile to see the structured rubric.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script src="/app.js"></script>
+<script>
+mountTopbar('setup');
+
+if (!WID) {
+  document.getElementById('landing').classList.remove('hidden');
+  document.getElementById('judgeQr').src = '/api/judge-qr.png';
+  document.getElementById('tryBtn').onclick = async (e) => {
+    e.target.disabled = true; e.target.textContent = 'Creating…';
+    const r = await api('/api/try-it-now', { method: 'POST' });
+    location.href = `/?w=${r.workspace_id}`;
+  };
+} else {
+  document.getElementById('setup').classList.remove('hidden');
+  const toCapture = document.getElementById('toCapture');
+  toCapture.href = `/capture.html?w=${WID}`;
+
+  function renderQuestions(qs) {
+    const box = document.getElementById('questions');
+    box.innerHTML = '';
+    (qs || []).forEach(q => {
+      box.append(el('div', { class: 'stat', style: 'margin-bottom:8px' },
+        el('div', {}, el('b', {}, `Q${q.question_no}. `), q.prompt || ''),
+        el('div', { class: 'muted', style: 'font-size:13px;margin-top:4px' },
+          `${q.max_marks} marks · concept: ${q.concept}`),
+      ));
+    });
+  }
+
+  api(`/api/w/${WID}`).then(d => {
+    if (d.rubric) {
+      document.getElementById('subject').value = d.rubric.subject;
+      document.getElementById('class_label').value = d.rubric.class_label;
+      document.getElementById('language').value = d.rubric.language;
+      document.getElementById('source_text').value = d.rubric.source_text;
+      renderQuestions(d.rubric.questions);
+    }
+  });
+
+  document.getElementById('compileBtn').onclick = async (e) => {
+    e.target.disabled = true; e.target.textContent = 'Compiling…';
+    try {
+      const body = {
+        subject: subject.value, class_label: class_label.value,
+        language: language.value, source_text: source_text.value,
+      };
+      const r = await api(`/api/w/${WID}/rubric`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+      });
+      renderQuestions(r.questions);
+      toast(r.fell_back ? 'Compiled (used safe fallback rubric)' : 'Rubric compiled');
+    } catch (err) { toast('Compile failed: ' + err.message); }
+    e.target.disabled = false; e.target.textContent = 'Compile rubric';
+  };
+}
+</script>

@@ -1,0 +1,19 @@
+{
+  "name": "vernacular-eval",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Vernacular answer-sheet evaluation — Sarvam-driven handwriting grading with in-language spoken feedback",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jimp": "^1.6.0",
+    "multer": "^2.0.1",
+    "qrcode": "^1.5.4"
+  }
+}

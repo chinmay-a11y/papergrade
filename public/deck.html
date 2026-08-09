@@ -1,0 +1,269 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PaperGrade — Judge Pitch</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#161b22; --ink:#f3f5f8; --muted:#9aa4b2; --line:#242b36;
+    --accent:#f97316; --accent-2:#2dd4bf; --good:#4ade80; --bad:#f87171; --warn:#fbbf24;
+    --dev:"Noto Sans Devanagari", system-ui, sans-serif;
+    font-family:system-ui,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg);color:var(--ink);overflow:hidden}
+  .deck{height:100vh;width:100vw;position:relative}
+  .slide{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;
+    padding:5vh 7vw;opacity:0;transition:opacity .35s ease}
+  .slide.active{display:flex;opacity:1}
+  .kicker{display:inline-flex;align-items:center;gap:8px;font-size:13px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--accent-2);font-weight:700;margin-bottom:14px}
+  .kicker .c{color:var(--muted);font-weight:600}
+  h1{font-size:clamp(30px,5vw,58px);line-height:1.04;letter-spacing:-.025em;margin-bottom:14px}
+  h2{font-size:clamp(22px,3.2vw,36px);line-height:1.1;letter-spacing:-.02em;margin-bottom:18px}
+  .lead{font-size:clamp(16px,1.8vw,22px);color:var(--muted);max-width:60ch;line-height:1.5}
+  .accent{color:var(--accent)}
+  .teal{color:var(--accent-2)}
+  .dev{font-family:var(--dev)}
+  .row{display:flex;gap:18px;flex-wrap:wrap}
+  .col{display:flex;flex-direction:column;gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px 22px}
+  .quote{border-left:4px solid var(--accent);padding:14px 20px;background:rgba(249,115,22,.07);
+    border-radius:0 12px 12px 0;font-size:clamp(16px,1.9vw,22px);line-height:1.5}
+  .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:8px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 20px}
+  .stat .big{font-size:clamp(26px,3.6vw,44px);font-weight:800;letter-spacing:-.02em}
+  .stat .k{font-size:13px;color:var(--muted);margin-top:4px}
+  .stat.hero{border-color:rgba(249,115,22,.45);background:linear-gradient(160deg,rgba(249,115,22,.12),transparent)}
+  table{border-collapse:collapse;width:100%;font-size:clamp(14px,1.5vw,18px)}
+  td,th{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:13px;letter-spacing:.05em;text-transform:uppercase}
+  td b{color:var(--accent)}
+  .flow{display:flex;align-items:stretch;gap:10px;flex-wrap:wrap;margin-top:10px}
+  .step{flex:1;min-width:120px;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:14px;position:relative}
+  .step .n{font-size:12px;color:var(--accent-2);font-weight:700}
+  .step .t{font-size:15px;font-weight:600;margin-top:4px}
+  .step .m{font-size:12px;color:var(--muted);margin-top:4px}
+  .badge{display:inline-block;font-size:12px;padding:3px 9px;border-radius:999px;
+    border:1px solid var(--line);color:var(--muted)}
+  .diff{font-family:var(--dev);font-size:clamp(15px,1.7vw,20px);line-height:2.1}
+  .diff .same{color:var(--ink)}
+  .diff .a{background:rgba(248,113,113,.18);color:#fca5a5;border-radius:4px;padding:0 3px;text-decoration:line-through}
+  .diff .b{background:rgba(74,222,128,.18);color:#86efac;border-radius:4px;padding:0 3px}
+  ul{list-style:none;display:flex;flex-direction:column;gap:10px}
+  li{padding-left:24px;position:relative;font-size:clamp(15px,1.6vw,19px);line-height:1.45;color:#dfe4ea}
+  li::before{content:"";position:absolute;left:0;top:.55em;width:9px;height:9px;border-radius:50%;
+    background:var(--accent)}
+  .qr{background:#fff;padding:10px;border-radius:14px}
+  .footer{position:fixed;bottom:18px;left:0;right:0;display:flex;align-items:center;
+    justify-content:space-between;padding:0 7vw;pointer-events:none}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:15px;pointer-events:auto}
+  .brand .dot{width:11px;height:11px;border-radius:50%;background:var(--accent)}
+  .dots{display:flex;gap:8px;pointer-events:auto}
+  .dots b{width:9px;height:9px;border-radius:50%;background:var(--line);cursor:pointer;transition:.2s}
+  .dots b.on{background:var(--accent);width:26px;border-radius:5px}
+  .count{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+  .nav{position:fixed;top:0;bottom:0;width:14vw;cursor:pointer;z-index:5}
+  .nav.left{left:0} .nav.right{right:0}
+  .hint{position:fixed;top:20px;right:7vw;color:var(--muted);font-size:12px;opacity:.7}
+
+  @media print{
+    @page{ size:1280px 720px; margin:0 }
+    html,body{height:auto;overflow:visible;background:var(--bg);color:var(--ink)
+      -webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .deck{height:auto}
+    .slide{display:flex!important;opacity:1!important;position:relative;inset:auto;
+      width:1280px;height:720px;page-break-after:always;break-after:page}
+    .slide:last-child{page-break-after:auto}
+    .nav,.footer,.hint{display:none!important}
+  }
+</style>
+
+<div class="deck">
+
+  <!-- 1 · PROBLEM -->
+  <section class="slide active">
+    <div class="kicker">Vernacular Answer-Sheet Evaluation <span class="c">· Originality &amp; Clarity</span></div>
+    <h1><span class="accent">PaperGrade</span><br>Grade handwritten answer sheets — in the student's own language.</h1>
+    <div class="row" style="margin-top:18px;align-items:stretch">
+      <div class="col" style="flex:1.3;min-width:320px">
+        <div class="quote">
+          This started with my mother. She teaches <b>Marathi</b>, and every exam season she grades
+          papers <b>by hand</b> — <b>3+ hours a day, 7 days an exam, 9 exams a year</b>.
+          <div style="margin-top:10px;font-size:.85em;color:var(--muted)">
+            That's <b class="accent">~189 hours a year — almost 8 full days</b> of unpaid work, on top of teaching.
+            Millions of teachers face the exact same grind.
+          </div>
+        </div>
+        <div class="lead">We're using Sarvam to put the benefits of AI into millions of average Indian
+          households — solving a <span class="teal">real problem</span>, born from my mother's hardship.</div>
+      </div>
+      <div class="col" style="flex:1;min-width:280px;justify-content:center">
+        <div class="stat-row" style="grid-template-columns:1fr">
+          <div class="stat hero"><div class="big">1.47 million</div><div class="k">schools in India (UDISE+ 2023-24)</div></div>
+          <div class="stat"><div class="big">248 million</div><div class="k">students enrolled</div></div>
+          <div class="stat"><div class="big">22 languages</div><div class="k">of instruction under NEP — the majority sat &amp; graded <b>by hand</b></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="lead" style="margin-top:22px;color:var(--ink)">
+      👉 The judge test: <b class="accent">write two lines on paper, photograph on your phone, watch it grade — live.</b>
+    </div>
+  </section>
+
+  <!-- 2 · HOW IT WORKS -->
+  <section class="slide">
+    <div class="kicker">How it works <span class="c">· Clarity &amp; Production-ready</span></div>
+    <h2>One photo in. A graded paper, a spoken explanation, and a QR — out.</h2>
+    <div class="flow">
+      <div class="step"><div class="n">01</div><div class="t">Rubric → JSON</div><div class="m">Teacher pastes a rubric; compiled once into structured criteria.</div></div>
+      <div class="step"><div class="n">02</div><div class="t">Photograph</div><div class="m">Phone camera, in-browser. Whole batch at once.</div></div>
+      <div class="step"><div class="n">03 · Vision</div><div class="t">Extract per question</div><div class="m">Handwriting read region-by-region.</div></div>
+      <div class="step"><div class="n">04 · 105B</div><div class="t">Grade + abstain</div><div class="m">Marks + confidence; flags what it can't judge.</div></div>
+      <div class="step"><div class="n">05</div><div class="t">Review queue</div><div class="m">Teacher confirms only the uncertain ones.</div></div>
+      <div class="step"><div class="n">06 · Bulbul</div><div class="t">Speak feedback</div><div class="m">Per-student audio in their language.</div></div>
+      <div class="step"><div class="n">07</div><div class="t">QR on the paper</div><div class="m">Student/parent scans → hears why marks were lost.</div></div>
+    </div>
+    <div class="row" style="margin-top:24px">
+      <div class="card" style="flex:1;min-width:280px">
+        <b class="teal">The business unlock:</b> a Class-8 student has no login and no app.
+        Every graded script gets a <b>QR the teacher staples on</b>. A parent hears, in their own
+        language, exactly why their child lost two marks. <span class="muted">No student account, no data collected.</span>
+      </div>
+      <div class="card" style="flex:1;min-width:280px">
+        <b>Five screens, hosted &amp; live:</b> Setup · Capture · <b class="accent">Review console</b> ·
+        Student card · Class dashboard.
+        <div class="muted" style="margin-top:8px">A judge opens a URL and it works in 90 seconds — the
+          unguessable workspace link <i>is</i> the credential. No signup wall.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · SARVAM IS THE ENGINE -->
+  <section class="slide">
+    <div class="kicker">Sarvam is the engine <span class="c">· Impact of Sarvam's Models</span></div>
+    <h2>Remove any one model, and the product breaks.</h2>
+    <table>
+      <tr><th>Model</th><th>Role — load-bearing, not an add-on</th></tr>
+      <tr><td><b>Sarvam Vision</b></td><td>Reads the handwriting, per question region — the Indic-script OCR a Western model can't match.</td></tr>
+      <tr><td><b>Sarvam-105B</b></td><td>Compiles the rubric &amp; grades each answer against it — with confidence and the power to <b>abstain</b>.</td></tr>
+      <tr><td><b>Bulbul</b></td><td>Speaks each student's feedback in their own language — the delivery a text UI can't make.</td></tr>
+      <tr><td><b>Saaras (ASR)</b></td><td>Teacher <i>speaks</i> the override reason in Hindi/Marathi — <span class="dev">"तीन अंक, सूत्र गलत"</span> — into the audit log. Teachers facing 40 scripts won't type.</td></tr>
+      <tr><td><b>Mayura / Translate</b></td><td>Rubric authored in English, feedback rendered in the student's language — one rubric, a multilingual classroom.</td></tr>
+    </table>
+    <div class="lead" style="margin-top:20px">
+      Why not a generic LLM? <span class="teal">Indic handwriting + in-language voice</span> is precisely
+      where sovereign Indian models win — and where a chatbot wrapper can't follow.
+    </div>
+  </section>
+
+  <!-- 4 · TECHNICAL DEPTH -->
+  <section class="slide">
+    <div class="kicker">Technical depth <span class="c">· beyond API stitching</span></div>
+    <h2>The system knows what it doesn't know — and proves it.</h2>
+    <div class="row" style="align-items:stretch">
+      <div class="col" style="flex:1.2;min-width:320px">
+        <div class="card">
+          <b>Confidence is measured, not self-reported.</b>
+          <div class="muted" style="margin:6px 0 10px">Each crop is read twice (one pass rotated + rescaled);
+            the <b>edit distance between the two transcripts</b> is the uncertainty. Disagreement, rendered:</div>
+          <div class="diff">
+            <span class="same">जल का</span> <span class="b">क्वथनांक</span> <span class="a">कवथनाक</span>
+            <span class="same">सौ डिग्री</span> <span class="a">सेल्सियस</span> <span class="same">होता है।</span>
+          </div>
+          <div class="muted" style="margin-top:8px">Below threshold → routed to a human. A model that abstains demos better than one that always answers.</div>
+        </div>
+        <ul>
+          <li><b>Per-question segmentation</b> — never a whole page for one grade</li>
+          <li><b>Rubric → JSON</b>, cached — grading is constrained, auditable output</li>
+          <li><b>Forced abstention</b> — <span class="mono">needs_human: true</span> instead of a guess</li>
+        </ul>
+      </div>
+      <div class="col" style="flex:1;min-width:280px;justify-content:center">
+        <div class="stat hero"><div class="big">QWK 0.896</div><div class="k">quadratic weighted kappa vs. teacher marks · <b>n = 20</b>, reported honestly with sample size</div></div>
+        <div class="stat"><div class="big" style="color:var(--bad)">5 of 6</div><div class="k">students missed the same concept — <b>friction (83%)</b>. One query → the artefact a principal buys.</div></div>
+        <div class="badge">Live numbers from the working build</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · BUSINESS + MOAT -->
+  <section class="slide">
+    <div class="kicker">Business impact &amp; moat <span class="c">· path to customers</span></div>
+    <h2>A wedge into every regional-language classroom in India.</h2>
+    <div class="row" style="align-items:stretch">
+      <div class="col" style="flex:1.2;min-width:320px">
+        <div class="card">
+          <b>Market.</b> State boards, coaching chains, ed-tech platforms.
+          <div class="muted" style="margin-top:6px">Formative assessment is the wedge; board-exam evaluation is the TAM —
+            across <b>1.47M schools · 248M students · 22 languages</b>. Coaching chains sell to <b>parents</b>,
+            and a parent who hears <i>why</i> in their own language is a renewal.</div>
+        </div>
+        <div class="card" style="border-color:rgba(45,212,191,.4)">
+          <b class="teal">The moat US models can't copy.</b>
+          Minors' answer scripts are protected data under India's DPDP Act. <b>Sovereign Indian models,
+          Indian infrastructure (Mumbai / ap-south-1), data never leaves the country.</b>
+          <div class="muted" style="margin-top:6px">Unlike an OCR-accuracy lead, the next Gemini release can't erase it.</div>
+        </div>
+      </div>
+      <div class="col" style="flex:1;min-width:260px">
+        <div class="card">
+          <b>Roadmap</b>
+          <ul style="margin-top:8px">
+            <li>Head-of-department concept analytics</li>
+            <li>Org / roles / SSO for schools</li>
+            <li>State-board evaluation pilots</li>
+            <li>DPDP consent, teacher-of-record sign-off, SOC 2</li>
+          </ul>
+        </div>
+        <div class="card center" style="text-align:center">
+          <div class="muted" style="margin-bottom:10px;font-size:13px">Try it on your phone — right now</div>
+          <img class="qr" id="judgeQr" width="150" height="150" alt="demo QR">
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="nav left"  onclick="go(-1)"></div>
+<div class="nav right" onclick="go(1)"></div>
+<div class="hint">← → to navigate · P to print</div>
+
+<div class="footer">
+  <div class="brand"><span class="dot"></span> PaperGrade · Sarvam AI</div>
+  <div class="dots" id="dots"></div>
+  <div class="count"><span id="cur">1</span> / <span id="total">5</span></div>
+</div>
+
+<script>
+  const slides = [...document.querySelectorAll('.slide')];
+  let i = 0;
+  const dots = document.getElementById('dots');
+  slides.forEach((_, k) => {
+    const b = document.createElement('b');
+    if (!k) b.className = 'on';
+    b.onclick = () => set(k);
+    dots.append(b);
+  });
+  document.getElementById('total').textContent = slides.length;
+  function set(n){
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((s, k) => s.classList.toggle('active', k === i));
+    [...dots.children].forEach((d, k) => d.classList.toggle('on', k === i));
+    document.getElementById('cur').textContent = i + 1;
+  }
+  function go(d){ set(i + d); }
+  addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); go(1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(-1); }
+    else if (e.key === 'Home') set(0);
+    else if (e.key === 'End') set(slides.length - 1);
+    else if (e.key.toLowerCase() === 'p') window.print();
+  });
+  // Load the live judge QR (falls back silently if server not reachable).
+  fetch('/api/judge-qr.png').then(r => { if (r.ok) document.getElementById('judgeQr').src = '/api/judge-qr.png'; })
+    .catch(() => {});
+  document.getElementById('judgeQr').src = '/api/judge-qr.png';
+</script>
