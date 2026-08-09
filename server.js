@@ -54,6 +54,20 @@ function ensureSharedDemo() {
 }
 const SHARED_DEMO_ID = ensureSharedDemo();
 
+// Self-seed the shared demo on boot when empty (free hosts have no persistent disk,
+// so the DB is fresh on every cold start). Seeding runs with the key blanked so it
+// uses fast, offline MOCK content — the judge's own live uploads still use the real
+// models. Non-blocking: the server starts serving immediately.
+(function maybeSeedSharedDemo() {
+  try {
+    if (db.listScripts(SHARED_DEMO_ID).length >= 4) return;
+    const { spawn } = require('child_process');
+    const child = spawn(process.execPath, [path.join(__dirname, 'seed-demo.js')],
+      { env: { ...process.env, SARVAM_API_KEY: '' }, stdio: 'inherit' });
+    child.on('exit', code => console.log('[seed] shared-demo seeding finished (exit ' + code + ')'));
+  } catch (e) { console.error('[seed] failed:', e.message); }
+})();
+
 // ---- meta ----------------------------------------------------------------
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, mock: sarvam.isMock(), shared_demo: SHARED_DEMO_ID });

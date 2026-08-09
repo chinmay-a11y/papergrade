@@ -1,0 +1,16 @@
+# Render blueprint — free web service, no credit card required.
+# Singapore is the closest free region to India. The DB is ephemeral on the free
+# plan (no disk), so the app self-seeds the demo class on each boot.
+services:
+  - type: web
+    name: papergrade
+    runtime: docker
+    plan: free
+    region: singapore
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      # Leave unset to run in MOCK (deterministic demo). Add your key in the Render
+      # dashboard to flip the whole pipeline to LIVE Sarvam.
+      - key: SARVAM_API_KEY
+        sync: false
