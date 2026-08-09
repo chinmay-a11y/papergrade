@@ -101,8 +101,7 @@ const now = () => Date.now();
 const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
 
 // --- workspaces -----------------------------------------------------------
-function createWorkspace(label = 'Demo class') {
-  const id = crypto.randomUUID();
+function createWorkspace(label = 'Demo class', id = crypto.randomUUID()) {
   db.prepare(
     'INSERT INTO workspaces (id, label, created_at, expires_at) VALUES (?, ?, ?, ?)'
   ).run(id, label, now(), now() + SEVEN_DAYS);

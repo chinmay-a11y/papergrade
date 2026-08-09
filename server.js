@@ -44,11 +44,14 @@ function seedRubricInto(workspaceId) {
   });
 }
 
-// Stable shared demo workspace for the judge QR (survives restarts).
+// Stable shared demo workspace. Uses a FIXED id so the capture/judge URL survives
+// restarts and redeploys (free hosts wipe the DB on each cold start) — otherwise a
+// pasted `?w=` link would 404 after every restart.
+const SHARED_DEMO_UUID = process.env.SHARED_DEMO_ID || 'demo';
 function ensureSharedDemo() {
-  const row = db.db.prepare("SELECT id FROM workspaces WHERE label = 'Shared demo class' LIMIT 1").get();
-  if (row) return row.id;
-  const ws = db.createWorkspace('Shared demo class');
+  const existing = db.getWorkspace(SHARED_DEMO_UUID);
+  if (existing) return existing.id;
+  const ws = db.createWorkspace('Shared demo class', SHARED_DEMO_UUID);
   seedRubricInto(ws.id);
   return ws.id;
 }
