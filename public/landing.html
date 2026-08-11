@@ -1,0 +1,196 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PaperGrade — Grade handwritten answer sheets in the student's language</title>
+<link rel="stylesheet" href="/stripe.css">
+<style>
+  .hero { position: relative; padding-bottom: 40px; }
+  .hero-grid { position: relative; z-index: 2; display: grid; grid-template-columns: 1.05fr .95fr; gap: 48px; align-items: center; padding: 40px 0 20px; }
+  @media (max-width: 900px){ .hero-grid { grid-template-columns: 1fr; gap: 28px; } }
+  .hero h1 { margin-bottom: 18px; }
+  .hero p.lead { font-size: 18px; color: var(--ink-2); max-width: 30ch; margin: 0 0 26px; }
+  .cta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  /* product mockup */
+  .mock-head { display:flex; align-items:center; gap:8px; margin-bottom:14px; }
+  .mock-head .dots { display:flex; gap:6px; } .mock-head .dots i { width:10px;height:10px;border-radius:50%; display:block; }
+  .ans-row { border-top: 1px solid var(--hairline); padding: 12px 0; }
+  .ans-row:first-of-type { border-top: none; }
+  .ans-meta { display:flex; align-items:center; gap:8px; margin-bottom:6px; font-size:13px; }
+  .ans-text { font-size: 15px; color: var(--ink); }
+  .marks { margin-left:auto; font-weight:400; }
+  .feature-ico { width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+    background:#f4f3ff; color:var(--primary); font-size:19px; margin-bottom:14px; }
+  .steps { display:grid; grid-template-columns: repeat(5,1fr); gap:14px; }
+  @media (max-width: 900px){ .steps { grid-template-columns: 1fr 1fr; } }
+  .step .n { font-size:11px; color:var(--primary); font-weight:400; letter-spacing:.1em; }
+  .logos { display:flex; gap:28px; flex-wrap:wrap; align-items:center; color:var(--ink-mute); font-size:13px; }
+  .stat-big { font-size: 40px; font-weight:300; letter-spacing:-1px; }
+</style>
+
+<div class="hero">
+  <div class="mesh"></div>
+  <div class="container">
+    <nav class="nav">
+      <div class="brand"><span class="dot"></span> PaperGrade</div>
+      <div class="nav-links">
+        <a href="#how" class="hide-sm">How it works</a>
+        <a href="#features" class="hide-sm">Features</a>
+        <a href="/deck.html" class="hide-sm">Pitch</a>
+        <a href="#" id="signinLink">Sign in</a>
+        <a href="#" class="btn btn-primary sm" id="getStarted">Get started</a>
+      </div>
+    </nav>
+
+    <div class="hero-grid">
+      <div>
+        <span class="pill-tag">Vernacular answer-sheet evaluation</span>
+        <h1 class="display-xxl" style="margin-top:16px">Grade handwritten answer sheets in the student's own language.</h1>
+        <p class="lead">Photograph a stack of Hindi, Marathi or Kannada scripts. PaperGrade reads the handwriting, grades against your rubric, flags what it isn't sure about, and speaks feedback to every student.</p>
+        <div class="cta-row">
+          <a href="#" class="btn btn-primary" id="getStarted2">Start grading — it's free</a>
+          <a href="#how" class="btn btn-ghost">See how it works →</a>
+        </div>
+        <div class="logos" style="margin-top:28px">
+          <span>Built on sovereign Indian models</span><span>•</span><span>Sarvam Vision · 105B · Bulbul</span>
+        </div>
+      </div>
+
+      <!-- Composited product mockup: a live grading detail -->
+      <div class="card-mockup">
+        <div class="mock-head">
+          <span class="dots"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></span>
+          <span class="mute" style="font-size:13px; margin-left:6px">Review console · Class 8 Science</span>
+          <span class="chip chip-review" style="margin-left:auto">2 need review</span>
+        </div>
+
+        <div class="ans-row">
+          <div class="ans-meta"><span class="pill-tag">Q1 · photosynthesis</span><span class="mute">conf 96%</span><span class="marks tnum">5 / 5</span></div>
+          <div class="ans-text dev">प्रकाश संश्लेषण वह प्रक्रिया है जिसमें पौधे सूर्य के प्रकाश से भोजन बनाते हैं।</div>
+          <div class="confbar" style="margin-top:8px"><span style="width:96%;background:#1a7f46"></span></div>
+        </div>
+        <div class="ans-row">
+          <div class="ans-meta"><span class="pill-tag">Q5 · friction</span><span class="mute">conf 58%</span><span class="chip chip-review">needs review</span><span class="marks tnum">1 / 5</span></div>
+          <div class="ans-text dev">घर्षण से चीज़ रुक जाती है।</div>
+          <div class="confbar" style="margin-top:8px"><span style="width:58%;background:#ea2261"></span></div>
+          <div class="mute" style="font-size:13px; margin-top:8px">Key definition missing; only the example was credited.</div>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:10px; margin-top:14px; padding-top:14px; border-top:1px solid var(--hairline)">
+          <span class="btn btn-dark sm" style="pointer-events:none">🔊 Play Hindi feedback</span>
+          <span class="mute tnum" style="font-size:13px">QWK 0.96 · n=20</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="section" id="how">
+  <div class="container">
+    <div class="center" style="max-width:640px; margin:0 auto 40px">
+      <span class="eyebrow mute">How it works</span>
+      <h2 class="display-lg" style="margin-top:10px">One photo in. A graded paper, a spoken explanation, and a QR — out.</h2>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="n">01</div><h3 class="heading-sm" style="margin:6px 0 4px">Set the rubric</h3><p class="mute" style="font-size:14px">Paste it, or photograph your answer key.</p></div>
+      <div class="step"><div class="n">02 · VISION</div><h3 class="heading-sm" style="margin:6px 0 4px">Read handwriting</h3><p class="mute" style="font-size:14px">Per-question OCR in 22 Indian languages.</p></div>
+      <div class="step"><div class="n">03 · 105B</div><h3 class="heading-sm" style="margin:6px 0 4px">Grade + abstain</h3><p class="mute" style="font-size:14px">Marks, rationale, and a confidence it can act on.</p></div>
+      <div class="step"><div class="n">04</div><h3 class="heading-sm" style="margin:6px 0 4px">You review</h3><p class="mute" style="font-size:14px">Only the low-confidence answers reach you.</p></div>
+      <div class="step"><div class="n">05 · BULBUL</div><h3 class="heading-sm" style="margin:6px 0 4px">Speak feedback</h3><p class="mute" style="font-size:14px">In-language audio + QR on the paper.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section soft" id="features">
+  <div class="container">
+    <div class="center" style="max-width:640px; margin:0 auto 40px">
+      <span class="eyebrow mute">What you get</span>
+      <h2 class="display-lg" style="margin-top:10px">Grading you can defend to a board.</h2>
+    </div>
+    <div class="grid-3">
+      <div class="card">
+        <div class="feature-ico">✍️</div>
+        <h3 class="heading-lg" style="margin-bottom:8px">Per-question grading</h3>
+        <p class="mute">Each answer is cropped and graded against its own rubric line — never a whole page for one grade. Partial marks, per criterion.</p>
+      </div>
+      <div class="card">
+        <div class="feature-ico">📊</div>
+        <h3 class="heading-lg" style="margin-bottom:8px">Measured confidence</h3>
+        <p class="mute">Every answer is read twice; the disagreement between passes is the confidence — a real measurement, not a model self-report. Low confidence routes to you.</p>
+      </div>
+      <div class="card">
+        <div class="feature-ico">🔊</div>
+        <h3 class="heading-lg" style="margin-bottom:8px">Feedback parents hear</h3>
+        <p class="mute">Bulbul speaks each student's feedback in Hindi, delivered by a QR stamped on the paper — plus two practice questions. No student login.</p>
+      </div>
+      <div class="card">
+        <div class="feature-ico">🎯</div>
+        <h3 class="heading-lg" style="margin-bottom:8px">Concept analytics</h3>
+        <p class="mute tnum">“5 of 6 students missed friction.” One query surfaces the misconception the whole class shares — the artefact a principal actually buys.</p>
+      </div>
+      <div class="card">
+        <div class="feature-ico">⚖️</div>
+        <h3 class="heading-lg" style="margin-bottom:8px">Agreement, honestly</h3>
+        <p class="mute tnum">Quadratic weighted kappa vs. teacher marks — reported with sample size. QWK 0.96 (n=20) on the demo set.</p>
+      </div>
+      <div class="card">
+        <div class="feature-ico">🇮🇳</div>
+        <h3 class="heading-lg" style="margin-bottom:8px">Data stays in India</h3>
+        <p class="mute">Sovereign Indian models on Indian infrastructure. Student names are stripped before any model call; every score change is audit-logged.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CREAM IMPACT BAND -->
+<section class="section">
+  <div class="container">
+    <div class="card-cream grid-2" style="align-items:center; gap:40px">
+      <div>
+        <span class="pill-tag">Why we built this</span>
+        <h2 class="display-lg" style="margin:14px 0">Born from a teacher's 189 unpaid hours a year.</h2>
+        <p style="color:var(--ink-2); font-size:16px">This started with my mother — a Marathi teacher who spends 3+ hours a day, every exam season, grading papers by hand. That's nearly eight full days a year. Millions of teachers face the same grind. PaperGrade gives those hours back.</p>
+      </div>
+      <div class="grid-2" style="gap:16px">
+        <div><div class="stat-big tnum">1.47M</div><div class="mute">schools in India</div></div>
+        <div><div class="stat-big tnum">248M</div><div class="mute">students</div></div>
+        <div><div class="stat-big tnum">22</div><div class="mute">regional languages</div></div>
+        <div><div class="stat-big tnum">~8 days</div><div class="mute">saved per teacher / year</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="section soft center">
+  <div class="container" style="max-width:640px">
+    <h2 class="display-lg">Grade your first stack in 90 seconds.</h2>
+    <p class="mute" style="margin:12px 0 24px; font-size:16px">No signup wall. Upload your answer key and a few scripts — PaperGrade does the rest.</p>
+    <a href="#" class="btn btn-primary" id="getStarted3">Get started free</a>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container" style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:16px">
+    <div class="brand" style="font-size:16px"><span class="dot"></span> PaperGrade</div>
+    <div class="mute">Sarvam Vision · Sarvam-105B · Bulbul · Saarika · Mayura · Mumbai / ap-south-1</div>
+    <div class="mute">Formative assessment for every Indian classroom.</div>
+  </div>
+</footer>
+
+<script src="/app.js"></script>
+<script>
+  // "Sign in" / "Get started" mint a workspace (no password — the workspace URL is the credential)
+  // and drop the teacher on the simple upload screen.
+  async function enter() {
+    try {
+      const r = await api('/api/try-it-now', { method: 'POST' });
+      location.href = `/teacher.html?w=${r.workspace_id}`;
+    } catch (e) { toast('Could not start a session: ' + e.message); }
+  }
+  ['getStarted','getStarted2','getStarted3','signinLink'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.onclick = (e) => { e.preventDefault(); enter(); };
+  });
+</script>

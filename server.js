@@ -110,6 +110,29 @@ app.post('/api/w/:wid/rubric', requireWorkspace, async (req, res) => {
   res.json({ rubric_id: rubric.id, questions: compiled.questions, fell_back: compiled === seed.compiled });
 });
 
+// Compile a rubric from a PHOTO of the answer key: OCR (Sarvam Vision / Doc AI) -> 105B compile.
+app.post('/api/w/:wid/rubric-image', requireWorkspace, upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file || !/^image\//.test(req.file.mimetype)) return res.status(400).json({ error: 'image required' });
+    const { language = 'hi-IN', subject = 'Science', class_label = 'Class 8' } = req.body || {};
+    const { buffer } = await reencode(req.file.buffer);            // strip EXIF, sanitise
+    let source_text = '';
+    try { source_text = await sarvam.extractHandwriting(buffer, { language, hint: 'Answer key' }); }
+    catch (e) { console.error('[rubric-image ocr]', e.message); }
+    let compiled = null;
+    if (source_text && source_text.trim()) {
+      try { compiled = await sarvam.compileRubric(source_text, { language }); }
+      catch (e) { console.error('[rubric-image compile]', e.message); }
+    }
+    if (!compiled || !compiled.questions?.length) compiled = seed.compiled;   // demo-safe fallback
+    const rubric = db.createRubric({ workspace_id: req.params.wid, subject, class_label, language,
+      source_text: source_text || seed.source_text, compiled_json: compiled });
+    res.json({ rubric_id: rubric.id, questions: compiled.questions, fell_back: compiled === seed.compiled });
+  } catch (e) {
+    console.error('[rubric-image]', e); res.status(500).json({ error: e.message });
+  }
+});
+
 // ---- capture / upload ----------------------------------------------------
 app.post('/api/w/:wid/scripts', requireWorkspace, upload.array('images', 40), async (req, res) => {
   try {
