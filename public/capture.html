@@ -1,47 +1,53 @@
+<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PaperGrade — Capture</title>
-<link rel="stylesheet" href="/app.css">
+<link rel="stylesheet" href="/stripe.css">
 <div id="topbar"></div>
-<div class="wrap">
-  <h1>Capture answer scripts</h1>
-  <p class="sub">Photograph or upload one page per student. Grading starts automatically.</p>
+<div class="page">
+  <h1 class="display-lg">Capture answer scripts</h1>
+  <p class="sub">One page per student. Upload a batch or snap photos — grading starts automatically.</p>
 
-  <div class="panel">
-    <label>Add scripts</label>
-    <input type="file" id="files" accept="image/*" capture="environment" multiple>
-    <div class="row" style="margin-top:12px">
-      <button class="btn" id="uploadBtn" disabled>Upload &amp; grade</button>
-      <a class="btn ghost" href="#" id="toReview">Go to Review console →</a>
+  <div class="card">
+    <label class="drop" id="drop" for="files">
+      <div style="font-size:26px">🖼️</div>
+      <div style="margin-top:6px">Tap to add student sheets</div>
+      <div class="mute" style="font-size:13px">Select multiple · JPG / PNG</div>
+    </label>
+    <input type="file" id="files" accept="image/*" capture="environment" multiple style="display:none">
+    <div class="thumbs" id="thumbs"></div>
+    <div class="row" style="display:flex; gap:12px; margin-top:16px">
+      <button class="btn btn-primary" id="uploadBtn" disabled>Upload &amp; grade</button>
+      <a class="btn btn-secondary" href="#" id="toReview">Go to review console →</a>
     </div>
-    <div id="thumbs" class="row" style="margin-top:16px"></div>
   </div>
 
-  <div class="panel" style="margin-top:20px">
-    <h2>Batch status</h2>
-    <div id="list" class="grid"></div>
+  <div class="card" style="margin-top:20px">
+    <h2 class="heading-lg" style="margin-bottom:12px">Batch status</h2>
+    <div id="list" class="stack-sm"></div>
   </div>
 </div>
 <script src="/app.js"></script>
 <script>
-mountTopbar('capture');
+mountAppbar('capture');
 document.getElementById('toReview').href = `/review.html?w=${WID}`;
 
 let picked = [];
 const filesInput = document.getElementById('files');
 const uploadBtn = document.getElementById('uploadBtn');
+const drop = document.getElementById('drop');
 
-filesInput.onchange = () => {
-  picked = [...filesInput.files];
+function addFiles(list) {
+  picked = picked.concat([...list]);
   const thumbs = document.getElementById('thumbs');
   thumbs.innerHTML = '';
-  picked.forEach(f => {
-    const url = URL.createObjectURL(f);
-    thumbs.append(el('img', { src: url, width: 84, height: 108,
-      style: 'object-fit:cover;border-radius:8px;border:1px solid var(--line)' }));
-  });
+  picked.forEach(f => thumbs.append(el('img', { src: URL.createObjectURL(f) })));
   uploadBtn.disabled = picked.length === 0;
-};
+}
+filesInput.onchange = () => addFiles(filesInput.files);
+['dragover','dragenter'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('drag'); }));
+['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('drag'); }));
+drop.addEventListener('drop', e => { if (e.dataTransfer?.files?.length) addFiles(e.dataTransfer.files); });
 
 uploadBtn.onclick = async () => {
   uploadBtn.disabled = true; uploadBtn.textContent = 'Uploading…';
@@ -55,28 +61,20 @@ uploadBtn.onclick = async () => {
   uploadBtn.textContent = 'Upload & grade';
 };
 
-const STATUS_ORDER = ['queued', 'extracting', 'grading', 'done'];
 function renderList(scripts) {
   const list = document.getElementById('list');
   list.innerHTML = '';
-  if (!scripts.length) { list.append(el('p', { class: 'muted' }, 'No scripts yet — upload above.')); return; }
+  if (!scripts.length) { list.append(el('p', { class: 'mute' }, 'No scripts yet — add sheets above.')); return; }
   scripts.forEach(s => {
     const score = (s.total_awarded != null && s.total_max)
-      ? el('span', { class: 'mono' }, `${fmt(s.total_awarded)} / ${fmt(s.total_max)}`) : el('span', { class: 'muted' }, '—');
-    list.append(el('div', { class: 'panel', style: 'display:flex;align-items:center;gap:14px;padding:14px' },
-      el('div', { class: 'mono', style: 'flex:1' }, s.student_alias),
+      ? el('span', { class: 'tnum' }, `${fmt(s.total_awarded)} / ${fmt(s.total_max)}`) : el('span', { class: 'mute' }, '—');
+    list.append(el('div', { class: 'card pad-sm', style: 'display:flex;align-items:center;gap:14px' },
+      el('span', { class: 'tnum', style: 'flex:1;color:var(--ink-2)' }, s.student_alias),
       score,
-      el('span', { class: 'chip ' + s.status }, s.status.replace('_', ' ')),
+      el('span', { class: 'st ' + s.status }, s.status.replace('_', ' ')),
     ));
   });
 }
-
-async function poll() {
-  try {
-    const d = await api(`/api/w/${WID}/scripts`);
-    renderList(d.scripts);
-  } catch {}
-}
-poll();
-setInterval(poll, 1500);
+async function poll() { try { renderList((await api(`/api/w/${WID}/scripts`)).scripts); } catch {} }
+poll(); setInterval(poll, 1500);
 </script>

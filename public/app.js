@@ -57,3 +57,28 @@ function mountTopbar(active) {
 }
 
 function fmt(n) { return (Math.round(n * 100) / 100).toString(); }
+
+// Light (Stripe-theme) app nav used by capture / review / dashboard.
+function appbar(active, mock) {
+  const link = (key, label, href) =>
+    el('a', { href: href + (WID ? `?w=${WID}` : ''), class: 'appnav-link' + (active === key ? ' on' : '') }, label);
+  const pill = mock == null ? '' :
+    el('span', { class: 'pill-tag', style: mock ? '' : 'background:#e7f7ee;color:#1a7f46' }, mock ? 'MOCK mode' : 'LIVE · Sarvam');
+  return el('div', { class: 'appbar' },
+    el('div', { class: 'appbar-in' },
+      el('a', { class: 'brand', href: '/landing.html' }, el('span', { class: 'dot' }), 'PaperGrade'),
+      el('div', { class: 'nav-links' },
+        link('capture', 'Capture', '/capture.html'),
+        link('review', 'Review', '/review.html'),
+        link('dashboard', 'Dashboard', '/dashboard.html'),
+        pill,
+      ),
+    ),
+  );
+}
+function mountAppbar(active) {
+  const holder = document.getElementById('topbar');
+  if (!holder) return;
+  api('/api/health').then(h => holder.replaceWith(appbar(active, h.mock)))
+    .catch(() => holder.replaceWith(appbar(active, null)));
+}

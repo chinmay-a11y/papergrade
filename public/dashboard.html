@@ -1,33 +1,34 @@
+<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PaperGrade — Class dashboard</title>
-<link rel="stylesheet" href="/app.css">
+<link rel="stylesheet" href="/stripe.css">
 <div id="topbar"></div>
-<div class="wrap">
-  <h1>Class dashboard</h1>
+<div class="page">
+  <h1 class="display-lg">Class dashboard</h1>
   <p class="sub">Agreement, review load, and where the class is failing — the artefact a principal buys.</p>
 
-  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">
-    <div class="stat"><div class="k">Quadratic weighted κ</div><div class="big" id="qwk">—</div><div class="muted" id="qwkn"></div></div>
-    <div class="stat"><div class="k">Scripts graded</div><div class="big" id="scripts">—</div></div>
-    <div class="stat"><div class="k">Needs-review queue</div><div class="big" id="queue">—</div></div>
-    <div class="stat"><div class="k">Teacher minutes saved</div><div class="big" id="mins">—</div></div>
-    <div class="stat"><div class="k">Score overrides</div><div class="big" id="overrides">—</div></div>
+  <div class="statgrid">
+    <div class="statcard accent"><div class="k">Quadratic weighted κ</div><div class="big tnum" id="qwk">—</div><div class="mute" id="qwkn" style="font-size:13px"></div></div>
+    <div class="statcard"><div class="k">Scripts graded</div><div class="big tnum" id="scripts">—</div></div>
+    <div class="statcard"><div class="k">Needs-review queue</div><div class="big tnum" id="queue">—</div></div>
+    <div class="statcard"><div class="k">Teacher minutes saved</div><div class="big tnum" id="mins">—</div></div>
+    <div class="statcard"><div class="k">Score overrides</div><div class="big tnum" id="overrides">—</div></div>
   </div>
 
-  <div class="panel" style="margin-top:20px">
-    <h2>Concept-failure — % of answers below half marks</h2>
+  <div class="card" style="margin-top:22px">
+    <h2 class="heading-lg" style="margin-bottom:6px">Concept failure</h2>
+    <p class="mute" style="font-size:14px; margin:0 0 14px">Share of answers scoring below half marks, by concept.</p>
     <div id="concepts"></div>
   </div>
 
-  <p class="muted" style="font-size:13px;margin-top:14px">
-    κ is reported honestly with sample size (n). Overridden marks count as teacher ground truth.
-    A hand-graded set of ~20 scripts sharpens this number.
+  <p class="mute" style="font-size:13px; margin-top:14px">
+    κ is reported honestly with sample size (n). Overridden marks count as teacher ground truth; a hand-graded set of ~20 scripts sharpens it.
   </p>
 </div>
 <script src="/app.js"></script>
 <script>
-mountTopbar('dashboard');
+mountAppbar('dashboard');
 api(`/api/w/${WID}/dashboard`).then(d => {
   document.getElementById('qwk').textContent = d.qwk == null ? '—' : d.qwk;
   document.getElementById('qwkn').textContent = d.qwk_n ? `n = ${d.qwk_n} answers` : 'no data yet';
@@ -37,17 +38,17 @@ api(`/api/w/${WID}/dashboard`).then(d => {
   document.getElementById('overrides').textContent = d.overrides;
 
   const box = document.getElementById('concepts');
-  if (!d.concepts.length) { box.innerHTML = '<p class="muted">No graded answers yet.</p>'; return; }
+  if (!d.concepts.length) { box.innerHTML = '<p class="mute">No graded answers yet.</p>'; return; }
   const maxRate = Math.max(...d.concepts.map(c => c.fail_rate), 0.001);
   d.concepts.forEach(c => {
     const pct = Math.round(c.fail_rate * 100);
     const w = Math.round((c.fail_rate / maxRate) * 100);
-    box.append(el('div', { style: 'margin:12px 0' },
-      el('div', { class: 'row', style: 'justify-content:space-between;margin-bottom:4px' },
-        el('b', {}, c.concept),
-        el('span', { class: 'muted' }, `${c.failed}/${c.total} students · ${pct}%`)),
-      el('div', { class: 'confbar ' + (pct >= 50 ? 'conf-lo' : pct >= 25 ? 'conf-mid' : 'conf-hi') },
-        el('span', { style: `width:${w}%` })),
+    const cls = pct >= 50 ? 'conf-lo' : pct >= 25 ? 'conf-mid' : 'conf-hi';
+    box.append(el('div', { style: 'margin:14px 0' },
+      el('div', { style: 'display:flex; justify-content:space-between; margin-bottom:6px; font-size:14px' },
+        el('b', { style:'font-weight:400' }, c.concept),
+        el('span', { class: 'mute tnum' }, `${c.failed}/${c.total} students · ${pct}%`)),
+      el('div', { class: 'confbar', style:'height:9px' }, el('span', { class: cls, style: `width:${w}%` })),
     ));
   });
 }).catch(e => toast('Load failed: ' + e.message));

@@ -1,30 +1,35 @@
+<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PaperGrade — Your feedback</title>
-<link rel="stylesheet" href="/app.css">
-<div class="wrap" style="max-width:520px">
-  <div class="panel" style="margin-top:24px">
+<link rel="stylesheet" href="/stripe.css">
+<div class="mesh" style="height:200px"></div>
+<div style="position:relative; z-index:2; max-width:520px; margin:0 auto; padding:20px 20px 60px">
+  <div class="nav"><div class="brand"><span class="dot"></span> PaperGrade</div></div>
+
+  <div class="card" style="margin-top:8px">
     <div class="center">
-      <div class="muted mono" id="alias"></div>
-      <div class="big" id="score">—</div>
-      <div class="muted">your score</div>
+      <div class="mute tnum" id="alias" style="font-size:13px"></div>
+      <div class="display-xl tnum" id="score" style="margin:6px 0">—</div>
+      <div class="mute">your score</div>
     </div>
 
-    <div id="audioWrap" class="center" style="margin:20px 0">
-      <audio id="audio" controls style="width:100%"></audio>
-      <p class="muted" id="transcript" style="font-size:14px;margin-top:8px"></p>
+    <div id="audioWrap" style="margin:20px 0">
+      <div class="mute" style="font-size:13px; margin-bottom:4px">🔊 Feedback in your language</div>
+      <audio id="audio" controls></audio>
+      <p class="mute dev" id="transcript" style="font-size:14px; margin-top:8px"></p>
     </div>
 
-    <h2>Per-question</h2>
+    <h2 class="heading-sm" style="margin:18px 0 10px">Per-question</h2>
     <div id="answers"></div>
 
-    <h2 style="margin-top:20px">Practice these</h2>
-    <div id="practice" class="muted"></div>
+    <h2 class="heading-sm" style="margin:18px 0 10px">Practice these</h2>
+    <div id="practice"></div>
   </div>
 
-  <div class="panel center" style="margin-top:16px">
-    <div class="muted" style="font-size:13px;margin-bottom:8px">Share this card</div>
-    <img id="qr" width="160" height="160" alt="QR">
+  <div class="card center" style="margin-top:16px">
+    <div class="mute" style="font-size:13px; margin-bottom:10px">Share this card</div>
+    <img id="qr" width="160" height="160" alt="QR" style="border-radius:8px">
   </div>
 </div>
 <script src="/app.js"></script>
@@ -39,19 +44,19 @@ else {
       document.getElementById('audio').src = d.audio_url;
       document.getElementById('transcript').textContent = d.transcript || '';
     } else {
-      document.getElementById('audioWrap').classList.add('hidden');
+      document.getElementById('audioWrap').style.display = 'none';
     }
     const box = document.getElementById('answers');
     d.answers.forEach(a => {
       box.append(el('div', { class: 'lineitem' },
-        el('div', { class: 'row', style: 'justify-content:space-between' },
-          el('b', {}, `Q${a.question_no} · ${a.concept}`),
-          el('span', { class: 'mono' }, `${fmt(a.awarded_marks)}/${fmt(a.max_marks)}`)),
-        el('div', { class: 'muted', style: 'font-size:13px;margin-top:4px' }, a.rationale || '')));
+        el('div', { style: 'display:flex; justify-content:space-between; align-items:center' },
+          el('span', { class: 'pill-tag' }, `Q${a.question_no} · ${a.concept}`),
+          el('span', { class: 'tnum', style:'color:var(--ink-2)' }, `${fmt(a.awarded_marks)}/${fmt(a.max_marks)}`)),
+        el('div', { class: 'mute', style: 'font-size:13px; margin-top:6px' }, a.rationale || '')));
     });
     const p = document.getElementById('practice');
     (d.practice_questions || []).forEach((q, i) =>
-      p.append(el('div', { class: 'lineitem' }, `${i + 1}. ${q}`)));
+      p.append(el('div', { class: 'lineitem dev' }, `${i + 1}. ${q}`)));
   }).catch(e => toast('Load failed: ' + e.message));
 }
 </script>

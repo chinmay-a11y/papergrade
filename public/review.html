@@ -1,45 +1,36 @@
+<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PaperGrade — Review console</title>
-<link rel="stylesheet" href="/app.css">
-<style>
-  .rev { display: grid; grid-template-columns: 320px 1fr; gap: 0; }
-  .crop { background: #0e1116; display: flex; align-items: center; justify-content: center; border-radius: 10px 0 0 10px; padding: 12px; }
-  .crop img { max-width: 100%; max-height: 300px; border-radius: 6px; background:#fff; }
-  .revbody { padding: 18px 20px; }
-  .lineitem { padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 8px; font-size: 14px; }
-  .marks-input { width: 74px !important; text-align: center; font-weight: 700; }
-  @media (max-width: 720px){ .rev{ grid-template-columns: 1fr; } .crop{ border-radius:10px 10px 0 0; } }
-</style>
+<link rel="stylesheet" href="/stripe.css">
 <div id="topbar"></div>
-<div class="wrap wrap-wide">
-  <div class="row" style="align-items:baseline">
-    <div style="flex:1">
-      <h1>Review console</h1>
-      <p class="sub">Sorted lowest-confidence first. Confidence is the measured disagreement between two OCR passes — not a model self-report.</p>
+<div class="page">
+  <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap">
+    <div>
+      <h1 class="display-lg">Review console</h1>
+      <p class="sub" style="margin:4px 0 0">Lowest-confidence first. Confidence is the measured disagreement between two OCR passes — not a model self-report.</p>
     </div>
-    <div class="row">
-      <label style="margin:0"><input type="checkbox" id="onlyReview"> only needs-review</label>
-    </div>
+    <label style="display:flex; align-items:center; gap:8px; font-size:14px; color:var(--ink-2)">
+      <input type="checkbox" id="onlyReview"> only needs-review
+    </label>
   </div>
-  <div id="answers" class="grid"></div>
+  <div id="answers" style="margin-top:20px"></div>
 </div>
 <script src="/app.js"></script>
 <script>
-mountTopbar('review');
+mountAppbar('review');
 let ALL = [];
 
 function diffHtml(diff) {
-  return el('div', { class: 'diff' }, ...(diff || []).map(tok =>
-    el('span', { class: tok.k }, tok.t + ' ')));
+  return el('div', { class: 'diff' }, ...(diff || []).map(tok => el('span', { class: tok.k }, tok.t + ' ')));
 }
 
 function renderItem(a) {
   const pct = Math.round((a.confidence || 0) * 100);
-  const bar = el('div', { class: 'confbar ' + confClass(a.confidence) }, el('span', { style: `width:${pct}%` }));
+  const bar = el('div', { class: 'confbar' }, el('span', { class: confClass(a.confidence), style: `width:${pct}%` }));
 
-  const marksInput = el('input', { type: 'text', class: 'marks-input', value: fmt(a.awarded_marks) });
-  const saveBtn = el('button', { class: 'btn small' }, 'Save');
+  const marksInput = el('input', { type: 'text', class: 'input marks-input', value: fmt(a.awarded_marks) });
+  const saveBtn = el('button', { class: 'btn btn-primary sm' }, 'Save');
   saveBtn.onclick = async () => {
     saveBtn.disabled = true;
     try {
@@ -53,37 +44,31 @@ function renderItem(a) {
     saveBtn.disabled = false;
   };
 
-  // Saaras mic override
-  const micBtn = el('button', { class: 'btn small ghost' }, '🎙 Speak reason');
+  const micBtn = el('button', { class: 'btn btn-secondary sm' }, '🎙 Speak reason');
   wireMic(micBtn, a, marksInput);
 
-  const rubricLines = (a.rubric_item?.criteria || []).map(c =>
-    el('div', { class: 'lineitem' }, c));
+  const rubricLines = (a.rubric_item?.criteria || []).map(c => el('div', { class: 'lineitem' }, c));
 
-  return el('div', { class: 'panel', style: 'padding:0;overflow:hidden' },
-    el('div', { class: 'rev' },
-      el('div', { class: 'crop' }, el('img', { src: a.crop_url, alt: 'answer crop' })),
-      el('div', { class: 'revbody' },
-        el('div', { class: 'row', style: 'align-items:center;margin-bottom:6px' },
-          el('span', { class: 'mono muted' }, a.student_alias || ''),
-          el('b', {}, `Q${a.question_no}`),
-          el('span', { class: 'pill' }, a.concept || ''),
-          a.needs_human ? el('span', { class: 'chip needs_review' }, 'needs review') : null,
-          el('span', { style: 'margin-left:auto;font-weight:700' }, `${pct}% conf`),
-        ),
-        bar,
-        el('h2', { style: 'margin:14px 0 4px;font-size:14px' }, 'Extracted answer (two-pass diff)'),
-        diffHtml(a.diff),
-        el('div', { class: 'muted', style: 'font-size:13px;margin:8px 0' },
-          el('b', {}, 'Rationale: '), a.rationale || '—'),
-        el('h2', { style: 'margin:12px 0 6px;font-size:14px' }, 'Rubric criteria'),
-        ...rubricLines,
-        el('div', { class: 'row', style: 'align-items:center;margin-top:12px' },
-          el('span', { class: 'muted' }, 'Marks'),
-          marksInput,
-          el('span', { class: 'muted' }, `/ ${fmt(a.max_marks)}`),
-          saveBtn, micBtn,
-        ),
+  return el('div', { class: 'rev' },
+    el('div', { class: 'crop' }, el('img', { src: a.crop_url, alt: 'answer crop' })),
+    el('div', { class: 'body' },
+      el('div', { style: 'display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap' },
+        el('span', { class: 'tnum mute', style: 'font-size:13px' }, a.student_alias || ''),
+        el('span', { class: 'pill-tag' }, `Q${a.question_no} · ${a.concept || ''}`),
+        a.needs_human ? el('span', { class: 'chip chip-review' }, 'needs review') : null,
+        el('span', { style: 'margin-left:auto; font-size:14px; color:var(--ink-2)' }, `${pct}% conf`),
+      ),
+      bar,
+      el('h3', { class: 'heading-sm', style: 'margin:16px 0 4px' }, 'Extracted answer — two-pass diff'),
+      diffHtml(a.diff),
+      el('div', { class: 'mute', style: 'font-size:14px; margin:10px 0' }, el('b', { style:'color:var(--ink-2)' }, 'Rationale: '), a.rationale || '—'),
+      el('h3', { class: 'heading-sm', style: 'margin:12px 0 8px' }, 'Rubric criteria'),
+      ...rubricLines,
+      el('div', { style: 'display:flex; align-items:center; gap:10px; margin-top:14px; flex-wrap:wrap' },
+        el('span', { class: 'mute', style:'font-size:14px' }, 'Marks'),
+        marksInput,
+        el('span', { class: 'mute', style:'font-size:14px' }, `/ ${fmt(a.max_marks)}`),
+        saveBtn, micBtn,
       ),
     ),
   );
@@ -100,9 +85,8 @@ function wireMic(btn, a, marksInput) {
       rec.onstop = async () => {
         stream.getTracks().forEach(t => t.stop());
         btn.textContent = '⏳ transcribing…';
-        const blob = new Blob(chunks, { type: 'audio/webm' });
         const fd = new FormData();
-        fd.append('audio', blob, 'override.webm');
+        fd.append('audio', new Blob(chunks, { type: 'audio/webm' }), 'override.webm');
         fd.append('new_marks', marksInput.value);
         try {
           const r = await api(`/api/answers/${a.id}/voice-override`, { method: 'POST', body: fd });
@@ -120,7 +104,7 @@ function render() {
   const box = document.getElementById('answers');
   box.innerHTML = '';
   const rows = ALL.filter(a => !only || a.needs_human);
-  if (!rows.length) { box.append(el('p', { class: 'muted' }, 'Nothing to review yet — grade some scripts first.')); return; }
+  if (!rows.length) { box.append(el('div', { class: 'card mute' }, 'Nothing to review yet — grade some scripts first.')); return; }
   rows.forEach(a => box.append(renderItem(a)));
 }
 document.getElementById('onlyReview').onchange = render;
