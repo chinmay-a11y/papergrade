@@ -62,9 +62,9 @@
       <label class="drop" id="keyDrop" for="keyFile">
         <div style="font-size:26px">📄</div>
         <div style="margin-top:6px">Tap to upload or photograph the answer key</div>
-        <div class="muted-note">JPG / PNG · one page</div>
+        <div class="muted-note">JPG · PNG · PDF</div>
       </label>
-      <input type="file" id="keyFile" accept="image/*" capture="environment">
+      <input type="file" id="keyFile" accept="image/*,application/pdf" capture="environment">
       <div class="row" style="margin-top:12px">
         <button class="btn btn-primary" id="compilePhoto" disabled>Read &amp; build rubric</button>
         <span class="muted-note" id="keyFileName"></span>
@@ -91,9 +91,9 @@
     <label class="drop" id="stuDrop" for="stuFiles">
       <div style="font-size:26px">🖼️</div>
       <div style="margin-top:6px">Tap to add student sheets</div>
-      <div class="muted-note">Select multiple · JPG / PNG</div>
+      <div class="muted-note">Select multiple · JPG · PNG · PDF (one student per page)</div>
     </label>
-    <input type="file" id="stuFiles" accept="image/*" capture="environment" multiple>
+    <input type="file" id="stuFiles" accept="image/*,application/pdf" capture="environment" multiple>
     <div class="thumbs" id="thumbs"></div>
   </div>
 

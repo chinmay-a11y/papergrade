@@ -12,6 +12,7 @@ const sarvam = require('./lib/sarvam');
 const pipeline = require('./lib/pipeline');
 const seed = require('./lib/seed-rubric');
 const { reencode, aliasFor } = require('./lib/privacy');
+const pdf = require('./lib/pdf');
 const { wordDiff } = require('./lib/confidence');
 const { qwk } = require('./lib/qwk');
 
@@ -113,9 +114,17 @@ app.post('/api/w/:wid/rubric', requireWorkspace, async (req, res) => {
 // Compile a rubric from a PHOTO of the answer key: OCR (Sarvam Vision / Doc AI) -> 105B compile.
 app.post('/api/w/:wid/rubric-image', requireWorkspace, upload.single('image'), async (req, res) => {
   try {
-    if (!req.file || !/^image\//.test(req.file.mimetype)) return res.status(400).json({ error: 'image required' });
+    if (!req.file) return res.status(400).json({ error: 'image or PDF required' });
     const { language = 'hi-IN', subject = 'Science', class_label = 'Class 8' } = req.body || {};
-    const { buffer } = await reencode(req.file.buffer);            // strip EXIF, sanitise
+    let src = req.file.buffer;
+    if (pdf.isPdf(req.file.mimetype, req.file.originalname, req.file.buffer)) {
+      const pages = await pdf.pdfToPngPages(req.file.buffer, { maxPages: 3 });   // first page = the key
+      if (!pages.length) return res.status(400).json({ error: 'empty PDF' });
+      src = pages[0];
+    } else if (!/^image\//.test(req.file.mimetype)) {
+      return res.status(400).json({ error: 'image or PDF required' });
+    }
+    const { buffer } = await reencode(src);                        // strip EXIF, sanitise
     let source_text = '';
     try { source_text = await sarvam.extractHandwriting(buffer, { language, hint: 'Answer key' }); }
     catch (e) { console.error('[rubric-image ocr]', e.message); }
@@ -138,24 +147,35 @@ app.post('/api/w/:wid/scripts', requireWorkspace, upload.array('images', 40), as
   try {
     const rubric = db.getWorkspaceRubric(req.params.wid);
     const files = req.files || [];
-    if (!files.length) return res.status(400).json({ error: 'no images' });
+    if (!files.length) return res.status(400).json({ error: 'no files' });
     const names = [].concat(req.body.names || []); // optional parallel array of student names
     const created = [];
-    for (let i = 0; i < files.length; i++) {
-      const f = files[i];
-      if (!/^image\//.test(f.mimetype)) continue;
-      const { buffer } = await reencode(f.buffer);           // strip EXIF, downscale, sanitise
-      const realName = names[i] || null;
-      const alias = realName ? aliasFor(realName, req.params.wid)
-                             : 'student_' + db.uid(2);
-      const imgPath = path.join(IMG_DIR, `${req.params.wid}_${alias}_${Date.now()}.png`);
-      fs.writeFileSync(imgPath, buffer);
-      const script = db.createScript({
-        workspace_id: req.params.wid, rubric_id: rubric?.id,
-        student_alias: alias, student_name: realName, image_path: imgPath,
-      });
-      pipeline.enqueue(script.id);
-      created.push({ id: script.id, student_alias: alias, status: 'queued' });
+    let nameIdx = 0;
+    for (const f of files) {
+      // Each uploaded file yields one or more page images (a PDF → one page per student).
+      let pageBuffers = [];
+      if (pdf.isPdf(f.mimetype, f.originalname, f.buffer)) {
+        try { pageBuffers = await pdf.pdfToPngPages(f.buffer); }
+        catch (e) { console.error('[pdf rasterise]', e.message); continue; }
+      } else if (/^image\//.test(f.mimetype)) {
+        pageBuffers = [f.buffer];
+      } else { continue; }
+
+      const singlePage = pageBuffers.length === 1;
+      for (const pageBuf of pageBuffers) {
+        const { buffer } = await reencode(pageBuf);          // strip EXIF, downscale, sanitise
+        const realName = singlePage ? (names[nameIdx] || null) : null;   // names only align to single images
+        const alias = realName ? aliasFor(realName, req.params.wid) : 'student_' + db.uid(2);
+        const imgPath = path.join(IMG_DIR, `${req.params.wid}_${alias}_${Date.now()}_${db.uid(2)}.png`);
+        fs.writeFileSync(imgPath, buffer);
+        const script = db.createScript({
+          workspace_id: req.params.wid, rubric_id: rubric?.id,
+          student_alias: alias, student_name: realName, image_path: imgPath,
+        });
+        pipeline.enqueue(script.id);
+        created.push({ id: script.id, student_alias: alias, status: 'queued' });
+      }
+      if (singlePage) nameIdx++;
     }
     res.json({ scripts: created });
   } catch (e) {

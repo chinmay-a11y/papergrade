@@ -12,9 +12,9 @@
     <label class="drop" id="drop" for="files">
       <div style="font-size:26px">🖼️</div>
       <div style="margin-top:6px">Tap to add student sheets</div>
-      <div class="mute" style="font-size:13px">Select multiple · JPG / PNG</div>
+      <div class="mute" style="font-size:13px">Select multiple · JPG · PNG · PDF (one student per page)</div>
     </label>
-    <input type="file" id="files" accept="image/*" capture="environment" multiple style="display:none">
+    <input type="file" id="files" accept="image/*,application/pdf" capture="environment" multiple style="display:none">
     <div class="thumbs" id="thumbs"></div>
     <div class="row" style="display:flex; gap:12px; margin-top:16px">
       <button class="btn btn-primary" id="uploadBtn" disabled>Upload &amp; grade</button>
