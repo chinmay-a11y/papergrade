@@ -24,7 +24,7 @@ const upload = multer({
 });
 
 app.use(express.json({ limit: '2mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), { index: 'landing.html' })); // new UI is the front door
 
 const DATA_DIR = path.join(__dirname, 'data');
 const IMG_DIR = path.join(DATA_DIR, 'pages');
@@ -362,7 +362,7 @@ app.get('/api/w/:wid/dashboard', requireWorkspace, (req, res) => {
 });
 
 // ---- clean URL for workspaces -------------------------------------------
-app.get('/w/:wid', (req, res) => res.redirect(`/?w=${req.params.wid}`));
+app.get('/w/:wid', (req, res) => res.redirect(`/teacher.html?w=${req.params.wid}`));
 
 app.listen(PORT, () => {
   console.log(`\n  Vernacular Eval running  http://localhost:${PORT}`);
