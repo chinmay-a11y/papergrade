@@ -184,6 +184,41 @@ app.post('/api/w/:wid/scripts', requireWorkspace, upload.array('images', 40), as
   }
 });
 
+// Grade an uploaded PDF/booklet as ONE student by comparing it to the answer key.
+// All pages of all uploaded files are treated as a single student's booklet.
+app.post('/api/w/:wid/grade-booklet', requireWorkspace, upload.array('images', 40), async (req, res) => {
+  try {
+    const rubric = db.getWorkspaceRubric(req.params.wid);
+    const files = req.files || [];
+    if (!files.length) return res.status(400).json({ error: 'no files' });
+    const pageBuffers = [];
+    for (const f of files) {
+      let bufs = [];
+      if (pdf.isPdf(f.mimetype, f.originalname, f.buffer)) {
+        try { bufs = await pdf.pdfToPngPages(f.buffer); } catch (e) { console.error('[booklet pdf]', e.message); }
+      } else if (/^image\//.test(f.mimetype)) { bufs = [f.buffer]; }
+      for (const b of bufs) { const { buffer } = await reencode(b); pageBuffers.push(buffer); }
+    }
+    if (!pageBuffers.length) return res.status(400).json({ error: 'no readable pages' });
+
+    const names = [].concat(req.body.names || []);
+    const realName = names[0] || null;
+    const alias = realName ? aliasFor(realName, req.params.wid) : 'student_' + db.uid(2);
+    const imgPath = path.join(IMG_DIR, `${req.params.wid}_${alias}_${Date.now()}_booklet.png`);
+    fs.writeFileSync(imgPath, pageBuffers[0]);   // first page kept for reference
+    const script = db.createScript({ workspace_id: req.params.wid, rubric_id: rubric?.id,
+      student_alias: alias, student_name: realName, image_path: imgPath });
+
+    res.json({ script_id: script.id, pages: pageBuffers.length, student_alias: alias });
+    // Compare-grade in the background; the review screen polls for status.
+    pipeline.processBooklet(script.id, pageBuffers).catch(e => {
+      console.error('[booklet]', e); db.setScriptStatus(script.id, 'error', e.message);
+    });
+  } catch (e) {
+    console.error('[grade-booklet]', e); res.status(500).json({ error: e.message });
+  }
+});
+
 // Polled by the capture screen for live status chips.
 app.get('/api/w/:wid/scripts', requireWorkspace, (req, res) => {
   const scripts = db.listScripts(req.params.wid).map(s => ({
@@ -208,7 +243,7 @@ app.get('/api/w/:wid/review', requireWorkspace, (req, res) => {
       awarded_marks: a.awarded_marks, max_marks: a.max_marks,
       confidence: a.confidence, edit_distance: a.edit_distance, needs_human: !!a.needs_human,
       diff: wordDiff(a.extract_pass_a, a.extract_pass_b),
-      crop_url: `/api/crops/${a.id}`,
+      crop_url: a.crop_path ? `/api/crops/${a.id}` : null,
       rubric_item: qById[a.question_no] || null,
     };
   });

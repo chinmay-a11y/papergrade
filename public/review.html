@@ -49,8 +49,12 @@ function renderItem(a) {
 
   const rubricLines = (a.rubric_item?.criteria || []).map(c => el('div', { class: 'lineitem' }, c));
 
+  const cropCell = a.crop_url
+    ? el('img', { src: a.crop_url, alt: 'answer crop' })
+    : el('div', { class: 'mute', style: 'text-align:center; font-size:13px; padding:20px' }, '📄', el('div', { style:'margin-top:6px' }, 'Whole-booklet compare'), el('div', {}, 'vs. answer key'));
+
   return el('div', { class: 'rev' },
-    el('div', { class: 'crop' }, el('img', { src: a.crop_url, alt: 'answer crop' })),
+    el('div', { class: 'crop' }, cropCell),
     el('div', { class: 'body' },
       el('div', { style: 'display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap' },
         el('span', { class: 'tnum mute', style: 'font-size:13px' }, a.student_alias || ''),

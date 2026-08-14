@@ -95,6 +95,16 @@
     </label>
     <input type="file" id="stuFiles" accept="image/*,application/pdf" capture="environment" multiple>
     <div class="thumbs" id="thumbs"></div>
+
+    <div id="modeRow" style="margin-top:16px; display:none">
+      <div class="mute" style="font-size:13px; margin-bottom:6px">How should I read this?</div>
+      <label style="display:flex; gap:8px; align-items:flex-start; margin:6px 0; font-size:14px">
+        <input type="radio" name="gmode" value="sheets" checked>
+        <span><b style="font-weight:400">Separate sheets</b> — one student per page (short-answer scans).</span></label>
+      <label style="display:flex; gap:8px; align-items:flex-start; margin:6px 0; font-size:14px">
+        <input type="radio" name="gmode" value="booklet">
+        <span><b style="font-weight:400">One booklet</b> — the whole file is one student; compare it to the answer key (essay / long-answer exams).</span></label>
+    </div>
   </div>
 
   <div class="barwrap">
@@ -178,10 +188,18 @@
 
   // 2. student sheets
   const stuFiles = document.getElementById('stuFiles');
+  function isPdfFile(f) { return f.type === 'application/pdf' || /\.pdf$/i.test(f.name); }
   function addFiles(list) {
     picked = picked.concat([...list]);
     const t = document.getElementById('thumbs'); t.innerHTML = '';
-    picked.forEach(f => t.append(el('img', { src: URL.createObjectURL(f) })));
+    picked.forEach(f => {
+      if (isPdfFile(f)) t.append(el('div', { class: 'lineitem', style: 'width:120px;text-align:center' },
+        '📄', el('div', { class: 'muted-note', style: 'margin-top:4px;word-break:break-all' }, f.name.slice(0, 20))));
+      else t.append(el('img', { src: URL.createObjectURL(f) }));
+    });
+    // Reveal the read-mode choice; default to "booklet" when a PDF is present.
+    document.getElementById('modeRow').style.display = picked.length ? 'block' : 'none';
+    if (picked.some(isPdfFile)) { const b = document.querySelector('input[name=gmode][value=booklet]'); if (b) b.checked = true; }
     refreshStart();
   }
   stuFiles.onchange = () => addFiles(stuFiles.files);
@@ -194,12 +212,14 @@
   // Start grading
   document.getElementById('startGrading').onclick = async (e) => {
     if (!picked.length) return;
-    e.target.disabled = true; e.target.textContent = 'Uploading…';
+    const booklet = (document.querySelector('input[name=gmode]:checked') || {}).value === 'booklet';
+    e.target.disabled = true; e.target.textContent = booklet ? 'Reading booklet…' : 'Uploading…';
     try {
       const fd = new FormData(); picked.forEach(f => fd.append('images', f));
-      await api(`/api/w/${WID}/scripts`, { method:'POST', body: fd });
-      toast('Grading started — taking you to the review console');
-      setTimeout(() => location.href = `/review.html?w=${WID}`, 900);
+      const url = booklet ? `/api/w/${WID}/grade-booklet` : `/api/w/${WID}/scripts`;
+      await api(url, { method:'POST', body: fd });
+      toast(booklet ? 'Comparing to the answer key — opening review' : 'Grading started — opening review');
+      setTimeout(() => location.href = `/review.html?w=${WID}`, 1000);
     } catch (err) { toast('Upload failed: ' + err.message); e.target.disabled = false; e.target.textContent = 'Start grading →'; }
   };
 </script>
