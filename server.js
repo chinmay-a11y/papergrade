@@ -116,18 +116,25 @@ app.post('/api/w/:wid/rubric-image', requireWorkspace, upload.single('image'), a
   try {
     if (!req.file) return res.status(400).json({ error: 'image or PDF required' });
     const { language = 'hi-IN', subject = 'Science', class_label = 'Class 8' } = req.body || {};
-    let src = req.file.buffer;
+    let pageBufs = [];
     if (pdf.isPdf(req.file.mimetype, req.file.originalname, req.file.buffer)) {
-      const pages = await pdf.pdfToPngPages(req.file.buffer, { maxPages: 3 });   // first page = the key
-      if (!pages.length) return res.status(400).json({ error: 'empty PDF' });
-      src = pages[0];
-    } else if (!/^image\//.test(req.file.mimetype)) {
+      pageBufs = await pdf.pdfToPngPages(req.file.buffer, { maxPages: Number(process.env.KEY_MAX_PAGES || 15) });
+      if (!pageBufs.length) return res.status(400).json({ error: 'empty PDF' });
+    } else if (/^image\//.test(req.file.mimetype)) {
+      pageBufs = [req.file.buffer];
+    } else {
       return res.status(400).json({ error: 'image or PDF required' });
     }
-    const { buffer } = await reencode(src);                        // strip EXIF, sanitise
-    let source_text = '';
-    try { source_text = await sarvam.extractHandwriting(buffer, { language, hint: 'Answer key' }); }
-    catch (e) { console.error('[rubric-image ocr]', e.message); }
+    // OCR every page of the answer key and concatenate into the model-answer text.
+    const parts = [];
+    for (let i = 0; i < pageBufs.length; i++) {
+      const { buffer } = await reencode(pageBufs[i]);               // strip EXIF, sanitise
+      try {
+        const t = await sarvam.extractHandwriting(buffer, { language, hint: `Answer key page ${i + 1}` });
+        if (t && t.trim()) parts.push(t.trim());
+      } catch (e) { console.error('[rubric-image ocr]', e.message); }
+    }
+    const source_text = parts.join('\n');
     let compiled = null;
     if (source_text && source_text.trim()) {
       try { compiled = await sarvam.compileRubric(source_text, { language }); }
