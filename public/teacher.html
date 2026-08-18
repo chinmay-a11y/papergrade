@@ -18,6 +18,9 @@
   .thumbs { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
   .thumbs img { width: 64px; height: 82px; object-fit: cover; border-radius: 8px; border: 1px solid var(--hairline); }
   .barwrap { position: sticky; bottom: 0; background: linear-gradient(180deg, transparent, #fff 45%); padding: 18px 0; margin-top: 26px; }
+  .drop { padding: 32px 20px; }
+  .drop svg { color: var(--primary); display: block; margin: 0 auto; }
+  .drop .t { font-size: 15px; color: var(--ink); margin: 10px 0 2px; }
 </style>
 
 <div class="appbar">
@@ -55,9 +58,9 @@
 
     <div id="tab-upload" style="margin-top:14px; display:none">
       <label class="drop" id="keyDrop" for="keyFile">
-        <div style="font-size:26px">📄</div>
-        <div style="margin-top:6px">Tap to upload or photograph the answer key</div>
-        <div class="note">JPG · PNG · PDF</div>
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>
+        <div class="t">Upload or take a photo of the answer key</div>
+        <div class="note">JPG, PNG or PDF</div>
       </label>
       <input type="file" id="keyFile" accept="image/*,application/pdf" capture="environment">
       <div style="display:flex; align-items:center; gap:12px; margin-top:12px">
@@ -76,12 +79,12 @@
       <h2 class="heading-lg">Student answers</h2>
       <span class="ok" id="stuOk"></span>
     </div>
-    <p class="note" style="margin:6px 0 14px">Upload the students' answer sheets — a batch of scans, a PDF, or phone photos.</p>
+    <p class="note" style="margin:6px 0 14px">Upload the students' answer sheets — scans, a PDF, or photos taken on your phone.</p>
 
     <label class="drop" id="stuDrop" for="stuFiles">
-      <div style="font-size:26px">🖼️</div>
-      <div style="margin-top:6px">Tap to add student answers</div>
-      <div class="note">Select multiple · JPG · PNG · PDF</div>
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      <div class="t">Tap to add, or drag files here</div>
+      <div class="note">JPG, PNG or PDF · add several at once</div>
     </label>
     <input type="file" id="stuFiles" accept="image/*,application/pdf" capture="environment" multiple>
     <div class="thumbs" id="thumbs"></div>
