@@ -1,115 +1,105 @@
 <!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PaperGrade — Set up your exam</title>
+<title>PaperGrade — Set up an exam</title>
 <link rel="stylesheet" href="/stripe.css">
 <style>
-  .wrap { max-width: 860px; margin: 0 auto; padding: 0 24px 80px; }
-  .step-card { margin-top: 22px; position: relative; }
-  .step-no { position:absolute; top:-12px; left:24px; width:26px; height:26px; border-radius:50%;
-    background:var(--primary); color:#fff; font-size:13px; display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow-1); }
-  .step-head { display:flex; align-items:center; gap:10px; margin-bottom:4px; }
-  .ok-badge { display:none; align-items:center; gap:6px; color:#1a7f46; font-size:14px; margin-left:auto; }
-  .ok-badge.show { display:inline-flex; }
-  .row { display:flex; gap:12px; flex-wrap:wrap; }
-  .qlist { margin-top:14px; display:grid; gap:8px; }
-  .qitem { border:1px solid var(--hairline); border-radius:8px; padding:10px 12px; font-size:14px; }
-  .muted-note { font-size:13px; color:var(--ink-mute); }
-  input[type=file] { display:none; }
-  .barwrap { position:sticky; bottom:0; background:linear-gradient(180deg,transparent,#fff 40%); padding:18px 0; margin-top:26px; }
+  .wrap { max-width: 700px; margin: 0 auto; padding: 0 24px 100px; }
+  .step { margin-top: 20px; }
+  .step-head { display: flex; align-items: center; gap: 10px; }
+  .step-num { width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: #fff;
+    font-size: 13px; display: flex; align-items: center; justify-content: center; flex: none; }
+  .ok { display: none; align-items: center; gap: 6px; color: #1a7f46; font-size: 14px; margin-left: auto; }
+  .ok.show { display: inline-flex; }
+  .note { font-size: 13px; color: var(--ink-mute); }
+  input[type=file] { display: none; }
+  .qlist { margin-top: 14px; display: grid; gap: 6px; }
+  .qitem { font-size: 13px; color: var(--ink-2); border-left: 2px solid var(--primary-subdued); padding: 2px 0 2px 12px; }
+  .thumbs { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+  .thumbs img { width: 64px; height: 82px; object-fit: cover; border-radius: 8px; border: 1px solid var(--hairline); }
+  .barwrap { position: sticky; bottom: 0; background: linear-gradient(180deg, transparent, #fff 45%); padding: 18px 0; margin-top: 26px; }
 </style>
 
-<div class="mesh" style="height:220px"></div>
-<div class="container" style="position:relative; z-index:2">
-  <nav class="nav">
+<div class="appbar">
+  <div class="appbar-in">
     <a class="brand" href="/landing.html"><span class="dot"></span> PaperGrade</a>
     <div class="nav-links">
-      <span class="mute" id="who">signed in</span>
-      <a href="#" id="reviewLink" class="hide-sm">Review console</a>
-      <a href="#" id="dashLink" class="btn btn-secondary sm">Dashboard</a>
+      <a id="reviewLink" href="#" class="appnav-link">Review</a>
+      <a id="dashLink" href="#" class="appnav-link">Dashboard</a>
     </div>
-  </nav>
+  </div>
 </div>
 
 <div class="wrap">
-  <span class="pill-tag">Set up this exam</span>
-  <h1 class="display-lg" style="margin:12px 0 6px">Two steps to a graded stack.</h1>
-  <p class="mute">First give PaperGrade the answer key, then the students' sheets. Files or phone photos — either works.</p>
+  <h1 class="display-lg" style="margin:22px 0 6px">Set up an exam</h1>
+  <p class="mute">Give PaperGrade the answer key, then the students' sheets. Files, PDFs, or phone photos — either works.</p>
 
-  <!-- STEP 1 — SAMPLE ANSWERS / ANSWER KEY -->
-  <div class="card step-card">
-    <div class="step-no">1</div>
+  <!-- STEP 1 — ANSWER KEY -->
+  <div class="card step">
     <div class="step-head">
-      <h2 class="heading-lg">Sample answers <span class="mute" style="font-size:15px">· the answer key &amp; rubric</span></h2>
-      <span class="ok-badge" id="keyOk">✓ answer key ready</span>
+      <span class="step-num">1</span>
+      <h2 class="heading-lg">Answer key</h2>
+      <span class="ok" id="keyOk">✓ ready</span>
     </div>
-    <p class="muted-note" style="margin-bottom:14px">Paste your marking scheme, or photograph the model answer sheet — PaperGrade reads it and builds a structured rubric.</p>
+    <p class="note" style="margin:6px 0 14px">Type your marking scheme, or upload / photograph the model answer sheet.</p>
 
     <div class="tabs" id="keyTabs">
-      <button data-t="paste" class="on">Paste text</button>
-      <button data-t="photo">Upload file / photo</button>
-      <button data-t="demo">Use demo key</button>
+      <button data-t="paste" class="on">Type it</button>
+      <button data-t="upload">Upload / photo</button>
     </div>
 
     <div id="tab-paste" style="margin-top:14px">
-      <textarea id="rubricText" placeholder="e.g. Q1. What is photosynthesis? Name the raw materials. (5 marks) — defines making food using sunlight (2); names CO2, water, sunlight (2); mentions chlorophyll (1)…"></textarea>
-      <div class="row" style="margin-top:12px">
-        <button class="btn btn-primary" id="compileText">Build rubric</button>
-      </div>
+      <textarea id="rubricText" placeholder="e.g.  Q1. What is photosynthesis? (5 marks) — making food from sunlight (2); names CO₂, water, sunlight (2); mentions chlorophyll (1)…"></textarea>
+      <button class="btn btn-primary" id="compileText" style="margin-top:12px">Save answer key</button>
     </div>
 
-    <div id="tab-photo" style="margin-top:14px; display:none">
+    <div id="tab-upload" style="margin-top:14px; display:none">
       <label class="drop" id="keyDrop" for="keyFile">
         <div style="font-size:26px">📄</div>
         <div style="margin-top:6px">Tap to upload or photograph the answer key</div>
-        <div class="muted-note">JPG · PNG · PDF</div>
+        <div class="note">JPG · PNG · PDF</div>
       </label>
       <input type="file" id="keyFile" accept="image/*,application/pdf" capture="environment">
-      <div class="row" style="margin-top:12px">
-        <button class="btn btn-primary" id="compilePhoto" disabled>Read &amp; build rubric</button>
-        <span class="muted-note" id="keyFileName"></span>
+      <div style="display:flex; align-items:center; gap:12px; margin-top:12px">
+        <button class="btn btn-primary" id="compilePhoto" disabled>Read answer key</button>
+        <span class="note" id="keyFileName"></span>
       </div>
-    </div>
-
-    <div id="tab-demo" style="margin-top:14px; display:none">
-      <p class="muted-note">Uses a ready-made <b>Class 8 · Science</b> answer key (5 short-answer questions) so you can try the flow immediately.</p>
-      <button class="btn btn-primary" id="useDemo" style="margin-top:10px">Use demo answer key</button>
     </div>
 
     <div class="qlist" id="questions"></div>
   </div>
 
   <!-- STEP 2 — STUDENT ANSWERS -->
-  <div class="card step-card">
-    <div class="step-no">2</div>
+  <div class="card step">
     <div class="step-head">
-      <h2 class="heading-lg">Student answer sheets</h2>
-      <span class="ok-badge" id="stuOk"></span>
+      <span class="step-num">2</span>
+      <h2 class="heading-lg">Student answers</h2>
+      <span class="ok" id="stuOk"></span>
     </div>
-    <p class="muted-note" style="margin-bottom:14px">One page per student. Upload a batch of scans, or snap photos with your phone.</p>
+    <p class="note" style="margin:6px 0 14px">Upload the students' answer sheets — a batch of scans, a PDF, or phone photos.</p>
 
     <label class="drop" id="stuDrop" for="stuFiles">
       <div style="font-size:26px">🖼️</div>
-      <div style="margin-top:6px">Tap to add student sheets</div>
-      <div class="muted-note">Select multiple · JPG · PNG · PDF (one student per page)</div>
+      <div style="margin-top:6px">Tap to add student answers</div>
+      <div class="note">Select multiple · JPG · PNG · PDF</div>
     </label>
     <input type="file" id="stuFiles" accept="image/*,application/pdf" capture="environment" multiple>
     <div class="thumbs" id="thumbs"></div>
 
     <div id="modeRow" style="margin-top:16px; display:none">
-      <div class="mute" style="font-size:13px; margin-bottom:6px">How should I read this?</div>
+      <div class="note" style="margin-bottom:6px">How should I read this?</div>
       <label style="display:flex; gap:8px; align-items:flex-start; margin:6px 0; font-size:14px">
         <input type="radio" name="gmode" value="sheets" checked>
-        <span><b style="font-weight:400">Separate sheets</b> — one student per page (short-answer scans).</span></label>
+        <span><b style="font-weight:400">Separate sheets</b> — one student per page.</span></label>
       <label style="display:flex; gap:8px; align-items:flex-start; margin:6px 0; font-size:14px">
         <input type="radio" name="gmode" value="booklet">
-        <span><b style="font-weight:400">One booklet</b> — the whole file is one student; compare it to the answer key (essay / long-answer exams).</span></label>
+        <span><b style="font-weight:400">One booklet</b> — the whole file is one student, compared to the answer key.</span></label>
     </div>
   </div>
 
   <div class="barwrap">
     <button class="btn btn-primary btn-block" id="startGrading" disabled>Start grading →</button>
-    <p class="center muted-note" style="margin-top:10px">Grading runs on Sarvam Vision + 105B. You'll land in the review console.</p>
+    <p class="center note" style="margin-top:10px">You'll land in the review console.</p>
   </div>
 </div>
 
@@ -127,42 +117,39 @@
     const box = document.getElementById('questions');
     box.innerHTML = '';
     (questions || []).forEach(q => box.append(el('div', { class: 'qitem' },
-      el('b', {}, `Q${q.question_no}. `), (q.prompt || '') + ` `,
-      el('span', { class: 'mute' }, `· ${q.max_marks} marks · ${q.concept}`))));
+      el('b', { style: 'font-weight:500' }, `Q${q.question_no}. `),
+      (q.prompt || '') + ` · ${q.max_marks} marks`)));
     refreshStart();
   }
   function refreshStart() {
     document.getElementById('startGrading').disabled = !(keyReady && picked.length);
-    document.getElementById('stuOk').textContent = picked.length ? `✓ ${picked.length} sheet(s) ready` : '';
-    document.getElementById('stuOk').classList.toggle('show', !!picked.length);
+    const stuOk = document.getElementById('stuOk');
+    stuOk.textContent = picked.length ? `✓ ${picked.length} sheet(s)` : '';
+    stuOk.classList.toggle('show', !!picked.length);
   }
 
-  // Prefill if the workspace already has a rubric (Try-it-now seeds one).
-  api(`/api/w/${WID}`).then(d => { if (d.rubric?.questions?.length) setKeyReady(d.rubric.questions); })
-    .catch(() => {});
-
-  // Tabs
+  // Tabs — type it vs upload/photo
   const tabs = document.getElementById('keyTabs');
   tabs.querySelectorAll('button').forEach(b => b.onclick = () => {
     tabs.querySelectorAll('button').forEach(x => x.classList.remove('on'));
     b.classList.add('on');
-    ['paste','photo','demo'].forEach(t => document.getElementById('tab-' + t).style.display = t === b.dataset.t ? 'block' : 'none');
+    ['paste', 'upload'].forEach(t => document.getElementById('tab-' + t).style.display = t === b.dataset.t ? 'block' : 'none');
   });
 
-  // 1a. paste → compile
+  // 1a. type → save
   document.getElementById('compileText').onclick = async (e) => {
     const text = document.getElementById('rubricText').value.trim();
-    if (!text) return toast('Paste your answer key / rubric first');
-    e.target.disabled = true; e.target.textContent = 'Building…';
+    if (!text) return toast('Type your answer key first');
+    e.target.disabled = true; e.target.textContent = 'Saving…';
     try {
-      const r = await api(`/api/w/${WID}/rubric`, { method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ source_text: text, language: 'hi-IN' }) });
-      setKeyReady(r.questions); toast(r.fell_back ? 'Built (used a safe fallback rubric)' : 'Rubric built from your text');
-    } catch (err) { toast('Could not build rubric: ' + err.message); }
-    e.target.disabled = false; e.target.textContent = 'Build rubric';
+      const r = await api(`/api/w/${WID}/rubric`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ source_text: text }) });
+      setKeyReady(r.questions); toast('Answer key saved');
+    } catch (err) { toast('Could not save: ' + err.message); }
+    e.target.disabled = false; e.target.textContent = 'Save answer key';
   };
 
-  // 1b. photo of answer key → OCR + compile
+  // 1b. photo/PDF of answer key → read
   const keyFile = document.getElementById('keyFile');
   keyFile.onchange = () => {
     const f = keyFile.files[0];
@@ -173,40 +160,31 @@
     const f = keyFile.files[0]; if (!f) return;
     e.target.disabled = true; e.target.textContent = 'Reading…';
     try {
-      const fd = new FormData(); fd.append('image', f); fd.append('language', 'hi-IN');
-      const r = await api(`/api/w/${WID}/rubric-image`, { method:'POST', body: fd });
-      setKeyReady(r.questions); toast('Answer key read and structured');
+      const fd = new FormData(); fd.append('image', f);
+      const r = await api(`/api/w/${WID}/rubric-image`, { method: 'POST', body: fd });
+      setKeyReady(r.questions); toast('Answer key read');
     } catch (err) { toast('Could not read the key: ' + err.message); }
-    e.target.disabled = false; e.target.textContent = 'Read & build rubric';
+    e.target.disabled = false; e.target.textContent = 'Read answer key';
   };
 
-  // 1c. demo key (workspace is seeded already; just confirm)
-  document.getElementById('useDemo').onclick = async () => {
-    try { const d = await api(`/api/w/${WID}`); if (d.rubric?.questions?.length) { setKeyReady(d.rubric.questions); toast('Demo answer key loaded'); }
-      else toast('Demo key not found'); } catch (e) { toast(e.message); }
-  };
-
-  // 2. student sheets
+  // 2. student answers
   const stuFiles = document.getElementById('stuFiles');
-  function isPdfFile(f) { return f.type === 'application/pdf' || /\.pdf$/i.test(f.name); }
+  const isPdf = f => f.type === 'application/pdf' || /\.pdf$/i.test(f.name);
   function addFiles(list) {
     picked = picked.concat([...list]);
     const t = document.getElementById('thumbs'); t.innerHTML = '';
     picked.forEach(f => {
-      if (isPdfFile(f)) t.append(el('div', { class: 'lineitem', style: 'width:120px;text-align:center' },
-        '📄', el('div', { class: 'muted-note', style: 'margin-top:4px;word-break:break-all' }, f.name.slice(0, 20))));
+      if (isPdf(f)) t.append(el('div', { class: 'qitem', style: 'width:120px;border:none' }, '📄 ', f.name.slice(0, 18)));
       else t.append(el('img', { src: URL.createObjectURL(f) }));
     });
-    // Reveal the read-mode choice; default to "booklet" when a PDF is present.
     document.getElementById('modeRow').style.display = picked.length ? 'block' : 'none';
-    if (picked.some(isPdfFile)) { const b = document.querySelector('input[name=gmode][value=booklet]'); if (b) b.checked = true; }
+    if (picked.some(isPdf)) { const b = document.querySelector('input[name=gmode][value=booklet]'); if (b) b.checked = true; }
     refreshStart();
   }
   stuFiles.onchange = () => addFiles(stuFiles.files);
-  // drag & drop
   const stuDrop = document.getElementById('stuDrop');
-  ['dragover','dragenter'].forEach(ev => stuDrop.addEventListener(ev, e => { e.preventDefault(); stuDrop.classList.add('drag'); }));
-  ['dragleave','drop'].forEach(ev => stuDrop.addEventListener(ev, e => { e.preventDefault(); stuDrop.classList.remove('drag'); }));
+  ['dragover', 'dragenter'].forEach(ev => stuDrop.addEventListener(ev, e => { e.preventDefault(); stuDrop.classList.add('drag'); }));
+  ['dragleave', 'drop'].forEach(ev => stuDrop.addEventListener(ev, e => { e.preventDefault(); stuDrop.classList.remove('drag'); }));
   stuDrop.addEventListener('drop', e => { if (e.dataTransfer?.files?.length) addFiles(e.dataTransfer.files); });
 
   // Start grading
@@ -216,9 +194,8 @@
     e.target.disabled = true; e.target.textContent = booklet ? 'Reading booklet…' : 'Uploading…';
     try {
       const fd = new FormData(); picked.forEach(f => fd.append('images', f));
-      const url = booklet ? `/api/w/${WID}/grade-booklet` : `/api/w/${WID}/scripts`;
-      await api(url, { method:'POST', body: fd });
-      toast(booklet ? 'Comparing to the answer key — opening review' : 'Grading started — opening review');
+      await api(`/api/w/${WID}/${booklet ? 'grade-booklet' : 'scripts'}`, { method: 'POST', body: fd });
+      toast('Grading started — opening review');
       setTimeout(() => location.href = `/review.html?w=${WID}`, 1000);
     } catch (err) { toast('Upload failed: ' + err.message); e.target.disabled = false; e.target.textContent = 'Start grading →'; }
   };
